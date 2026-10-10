@@ -42,6 +42,12 @@ function cleanParams() {
     );
 }
 
+function exportUrl(name) {
+    const base = route(name, props.event.id);
+    const params = new URLSearchParams(cleanParams()).toString();
+    return params ? `${base}?${params}` : base;
+}
+
 watch(form, () => applyFilters());
 
 function act(name, guestId) {
@@ -72,13 +78,25 @@ const attendanceBadge = {
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">
                     {{ event.name }} — Convidados
                 </h2>
-                <Link
-                    v-if="can.manageGuests"
-                    :href="route('guests.import.create', event.id)"
-                    class="rounded-md bg-sky-700 px-3 py-2 text-sm font-medium text-white hover:bg-sky-800"
-                >
-                    Importar
-                </Link>
+                <div class="flex gap-2">
+                    <a
+                        v-if="can.export"
+                        :href="exportUrl('guests.export.excel')"
+                        class="rounded-md border border-sky-700 px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50"
+                    >Excel</a>
+                    <a
+                        v-if="can.export"
+                        :href="exportUrl('guests.export.pdf')"
+                        class="rounded-md border border-sky-700 px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50"
+                    >PDF</a>
+                    <Link
+                        v-if="can.manageGuests"
+                        :href="route('guests.import.create', event.id)"
+                        class="rounded-md bg-sky-700 px-3 py-2 text-sm font-medium text-white hover:bg-sky-800"
+                    >
+                        Importar
+                    </Link>
+                </div>
             </div>
         </template>
 

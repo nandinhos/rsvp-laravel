@@ -64,6 +64,7 @@ class GuestController extends Controller
             'can' => [
                 'manageGuests' => $request->user()->can('manageGuests', $event),
                 'operate' => $request->user()->can('operate', $event),
+                'export' => $request->user()->can('export', $event),
             ],
         ]);
     }

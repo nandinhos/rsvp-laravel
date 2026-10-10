@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\GuestExportController;
 use App\Http\Controllers\GuestImportController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -49,6 +50,10 @@ Route::middleware('auth')->group(function () {
         Route::get('import', [GuestImportController::class, 'create'])->name('guests.import.create');
         Route::post('import/preview', [GuestImportController::class, 'preview'])->name('guests.import.preview');
         Route::post('import', [GuestImportController::class, 'store'])->name('guests.import.store');
+
+        // Exportações (PRD §7). Permissão verificada no servidor (CA-11).
+        Route::get('export/excel', [GuestExportController::class, 'excel'])->name('guests.export.excel');
+        Route::get('export/pdf', [GuestExportController::class, 'pdf'])->name('guests.export.pdf');
     });
 });
 
