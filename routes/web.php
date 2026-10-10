@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GuestController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Lista de convidados por evento (PRD §5). Autorização por evento no controller.
+    Route::prefix('events/{event}')->group(function () {
+        Route::get('guests', [GuestController::class, 'index'])->name('guests.index');
+        Route::post('guests', [GuestController::class, 'store'])->name('guests.store');
+        Route::patch('guests/{guest}', [GuestController::class, 'update'])->name('guests.update');
+        Route::delete('guests/{guest}', [GuestController::class, 'destroy'])->name('guests.destroy');
+
+        // Ações rápidas (PRD §5).
+        Route::post('guests/{guest}/confirm', [GuestController::class, 'confirm'])->name('guests.confirm');
+        Route::post('guests/{guest}/decline', [GuestController::class, 'decline'])->name('guests.decline');
+        Route::post('guests/{guest}/check-in', [GuestController::class, 'checkIn'])->name('guests.check-in');
+    });
 });
 
 require __DIR__.'/auth.php';
