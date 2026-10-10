@@ -16,8 +16,22 @@ export default {
                 sans: ['Inter', ...defaultTheme.fontFamily.sans],
             },
             colors: {
-                // Design system institucional (PRD §10) — tons de azul.
+                // ── Design system institucional (PRD §10) ──
+                // Escala completa 50–950 derivada dos tons de azul institucional.
+                // Fonte única de verdade: nenhum hex hardcoded nas views.
                 institutional: {
+                    50: '#f1f6fb',
+                    100: '#e2edf7',
+                    200: '#c0d8ec',
+                    300: '#8fb8db',
+                    400: '#5e97c4',
+                    500: '#276ca3', // interaction
+                    600: '#1c4e80', // base
+                    700: '#174067',
+                    800: '#123152',
+                    900: '#0b2a4a', // deep
+                    950: '#071d33',
+                    // aliases semânticos (compatibilidade + legibilidade)
                     deep: '#0B2A4A',
                     base: '#1C4E80',
                     interaction: '#276CA3',
