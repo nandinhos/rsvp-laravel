@@ -2,24 +2,96 @@
 
 namespace Database\Seeders;
 
+use App\Enums\EventRole;
+use App\Enums\EventStatus;
+use App\Enums\EventVisibility;
+use App\Models\Event;
+use App\Models\Guest;
+use App\Models\GuestCategory;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Services\GuestNumberAllocator;
+use App\Services\GuestRelationshipService;
+use App\Services\RsvpService;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Usuários de teste por perfil (senha padrão: password).
+        $admin = $this->user('Administrador Demo', 'admin@rsvp.test');
+        $gestor = $this->user('Gestor Demo', 'gestor@rsvp.test');
+        $operador = $this->user('Operador Demo', 'operador@rsvp.test');
+        $leitor = $this->user('Leitor Demo', 'leitor@rsvp.test');
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Evento demonstrativo.
+        $event = Event::create([
+            'name' => 'Cerimônia Institucional 2026',
+            'starts_at' => now()->addWeeks(3)->setTime(19, 0),
+            'location' => 'Auditório Principal',
+            'visibility' => EventVisibility::Reservado,
+            'estimated_audience' => 200,
+            'status' => EventStatus::Ativo,
+            'timezone' => 'America/Sao_Paulo',
+        ]);
+
+        // Permissões por evento (um perfil por usuário neste evento demo).
+        $event->users()->attach($admin, ['role' => EventRole::Administrador->value]);
+        $event->users()->attach($gestor, ['role' => EventRole::Gestor->value]);
+        $event->users()->attach($operador, ['role' => EventRole::Operador->value]);
+        $event->users()->attach($leitor, ['role' => EventRole::Leitor->value]);
+
+        // Categorias padrão.
+        $categories = [];
+        foreach (Event::DEFAULT_CATEGORIES as $i => $name) {
+            $categories[$name] = GuestCategory::create([
+                'event_id' => $event->id,
+                'name' => $name,
+                'sort_order' => $i,
+            ]);
+        }
+
+        $allocator = app(GuestNumberAllocator::class);
+        $links = app(GuestRelationshipService::class);
+        $rsvp = app(RsvpService::class);
+
+        $make = function (string $name, string $category, string $rsvpStatus = 'pendente') use ($event, $categories, $allocator) {
+            return Guest::create([
+                'event_id' => $event->id,
+                'number' => $allocator->next($event),
+                'full_name' => $name,
+                'guest_category_id' => $categories[$category]->id,
+                'rsvp_status' => $rsvpStatus,
+            ]);
+        };
+
+        // Caso do PRD: Ana (titular, não confirmada) + Bruno (acompanhante que confirma => representante).
+        $ana = $make('Ana Silva', 'Autoridade');
+        $bruno = $make('Bruno Costa', 'Convidado geral');
+        $links->attachCompanion($bruno, $ana);
+        $rsvp->confirm($bruno); // Bruno promovido a representante (CA-05)
+
+        // Titular confirmado com acompanhante confirmado (CA-04).
+        $carlos = $make('Carlos Mendes', 'Diretoria', 'confirmado');
+        $diana = $make('Diana Prince', 'Convidado geral');
+        $links->attachCompanion($diana, $carlos);
+        $rsvp->confirm($diana);
+
+        // Alguns convidados variados.
+        $make('Eduardo Lima', 'Comitê', 'confirmado');
+        $make('Fernanda Rocha', 'Autoridade');
+        $make('Gabriel Souza', 'Convidado geral', 'nao_participara');
+        $make('Helena Dias', 'Diretoria', 'confirmado');
+    }
+
+    private function user(string $name, string $email): User
+    {
+        return User::create([
+            'name' => $name,
+            'email' => $email,
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
         ]);
     }
 }

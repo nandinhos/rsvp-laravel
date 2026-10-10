@@ -1,6 +1,6 @@
 <script setup>
-import { reactive, watch } from 'vue';
-import { router, Head, Link } from '@inertiajs/vue3';
+import { reactive, ref, watch } from 'vue';
+import { router, Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 const props = defineProps({
@@ -11,6 +11,24 @@ const props = defineProps({
     options: Object,
     can: Object,
 });
+
+const showCreate = ref(false);
+const createForm = useForm({
+    full_name: '',
+    guest_category_id: '',
+    rsvp_status: 'pendente',
+    note: '',
+});
+
+function submitCreate() {
+    createForm.post(route('guests.store', props.event.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            createForm.reset();
+            showCreate.value = false;
+        },
+    });
+}
 
 const form = reactive({
     search: props.filters.search ?? '',
@@ -96,12 +114,52 @@ const attendanceBadge = {
                     >
                         Importar
                     </Link>
+                    <button
+                        v-if="can.manageGuests"
+                        @click="showCreate = !showCreate"
+                        class="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                    >
+                        Novo convidado
+                    </button>
                 </div>
             </div>
         </template>
 
         <div class="py-6">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <!-- Formulário de cadastro manual (PRD §6-C) -->
+                <div v-if="showCreate && can.manageGuests" class="mb-4 rounded-lg bg-white p-5 shadow">
+                    <h3 class="mb-3 font-semibold text-gray-900">Novo convidado</h3>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-gray-600">Nome completo</label>
+                            <input v-model="createForm.full_name" type="text" class="w-full rounded-md border-gray-300 text-sm shadow-sm" />
+                            <p v-if="createForm.errors.full_name" class="mt-1 text-xs text-rose-600">{{ createForm.errors.full_name }}</p>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-gray-600">Categoria</label>
+                            <select v-model="createForm.guest_category_id" class="w-full rounded-md border-gray-300 text-sm shadow-sm">
+                                <option value="">Selecione…</option>
+                                <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+                            </select>
+                            <p v-if="createForm.errors.guest_category_id" class="mt-1 text-xs text-rose-600">{{ createForm.errors.guest_category_id }}</p>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-gray-600">Confirmação</label>
+                            <select v-model="createForm.rsvp_status" class="w-full rounded-md border-gray-300 text-sm shadow-sm">
+                                <option v-for="o in options.rsvp" :key="o.value" :value="o.value">{{ o.label }}</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button
+                                @click="submitCreate"
+                                :disabled="createForm.processing"
+                                class="w-full rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                            >Adicionar</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Busca e filtros -->
                 <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                     <input

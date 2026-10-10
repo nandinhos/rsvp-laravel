@@ -13,7 +13,18 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                // Design system institucional (PRD §10) — tons de azul.
+                institutional: {
+                    deep: '#0B2A4A',
+                    base: '#1C4E80',
+                    interaction: '#276CA3',
+                    surface: '#FFFFFF',
+                    neutral: '#F6F9FC',
+                    text: '#182738',
+                },
             },
         },
     },
