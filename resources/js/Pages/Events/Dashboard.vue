@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 const props = defineProps({
@@ -8,6 +8,10 @@ const props = defineProps({
     metrics: Object,
     can: Object,
 });
+
+function action(name) {
+    router.post(route(name, props.event.id), {}, { preserveScroll: true });
+}
 
 const cards = computed(() => [
     { label: 'Confirmados', value: props.metrics.confirmed_hosts, hint: 'Titulares' },
@@ -27,16 +31,46 @@ function rate(value) {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-2">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">
                     {{ event.name }}
                 </h2>
-                <Link
-                    :href="route('guests.index', event.id)"
-                    class="rounded-md bg-sky-700 px-3 py-2 text-sm font-medium text-white hover:bg-sky-800"
-                >
-                    Ver convidados
-                </Link>
+                <div class="flex flex-wrap gap-2">
+                    <Link
+                        v-if="metrics.has_pending_conflicts && can.operate"
+                        :href="route('conflicts.index', event.id)"
+                        class="rounded-md bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600"
+                    >
+                        Resolver conflitos
+                    </Link>
+                    <Link
+                        v-if="can.administer"
+                        :href="route('events.audit', event.id)"
+                        class="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                        Auditoria
+                    </Link>
+                    <button
+                        v-if="can.administer && event.status !== 'encerrado'"
+                        @click="action('events.close')"
+                        class="rounded-md border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50"
+                    >
+                        Encerrar
+                    </button>
+                    <button
+                        v-if="can.administer && event.status === 'encerrado'"
+                        @click="action('events.reopen')"
+                        class="rounded-md border border-emerald-300 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+                    >
+                        Reabrir
+                    </button>
+                    <Link
+                        :href="route('guests.index', event.id)"
+                        class="rounded-md bg-sky-700 px-3 py-2 text-sm font-medium text-white hover:bg-sky-800"
+                    >
+                        Ver convidados
+                    </Link>
+                </div>
             </div>
         </template>
 

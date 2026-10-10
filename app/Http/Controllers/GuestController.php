@@ -8,6 +8,7 @@ use App\Enums\RsvpStatus;
 use App\Exceptions\GuestDomainException;
 use App\Models\Event;
 use App\Models\Guest;
+use App\Services\AuditLogger;
 use App\Services\CheckInService;
 use App\Services\GuestListQuery;
 use App\Services\GuestWriter;
@@ -25,6 +26,7 @@ class GuestController extends Controller
         private readonly GuestWriter $writer,
         private readonly RsvpService $rsvp,
         private readonly CheckInService $checkIn,
+        private readonly AuditLogger $audit,
     ) {}
 
     /** Lista numerada com busca, filtros e ordenação (PRD §5, CA-01). */
@@ -82,10 +84,12 @@ class GuestController extends Controller
         ]);
 
         try {
-            $this->writer->create($event, $data);
+            $created = $this->writer->create($event, $data);
         } catch (GuestDomainException $e) {
             return back()->withErrors(['guest_category_id' => $e->getMessage()])->withInput();
         }
+
+        $this->audit->log('guest.created', $request->user(), $event, $created, ['name' => $created->full_name]);
 
         return back()->with('success', 'Convidado adicionado.');
     }
@@ -119,6 +123,8 @@ class GuestController extends Controller
 
         $guest->delete(); // exclusão lógica (PRD §5)
 
+        $this->audit->log('guest.deleted', $request->user(), $event, $guest, ['name' => $guest->full_name]);
+
         return back()->with('success', 'Convidado removido.');
     }
 
@@ -129,6 +135,8 @@ class GuestController extends Controller
         $this->guardOpen($event);
 
         $this->rsvp->confirm($guest);
+
+        $this->audit->log('guest.confirmed', $request->user(), $event, $guest);
 
         return back()->with('success', 'Participação confirmada.');
     }
@@ -141,6 +149,8 @@ class GuestController extends Controller
 
         $this->rsvp->decline($guest);
 
+        $this->audit->log('guest.declined', $request->user(), $event, $guest);
+
         return back()->with('success', 'Ausência registrada.');
     }
 
@@ -151,6 +161,8 @@ class GuestController extends Controller
         $this->guardOpen($event);
 
         $this->checkIn->checkIn($guest, $request->user());
+
+        $this->audit->log('guest.checked_in', $request->user(), $event, $guest);
 
         return back()->with('success', 'Credenciamento registrado.');
     }

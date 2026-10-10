@@ -47,6 +47,7 @@ class DashboardController extends Controller
             'can' => [
                 'operate' => $request->user()->can('operate', $event),
                 'manageGuests' => $request->user()->can('manageGuests', $event),
+                'administer' => $request->user()->can('administer', $event),
             ],
         ]);
     }

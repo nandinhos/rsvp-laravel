@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ConflictController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GuestController;
@@ -36,6 +37,16 @@ Route::middleware('auth')->group(function () {
     // Lista de convidados por evento (PRD §5). Autorização por evento no controller.
     Route::prefix('events/{event}')->group(function () {
         Route::get('', [DashboardController::class, 'show'])->name('events.dashboard');
+
+        // Encerramento/reabertura e auditoria (PRD §3, §9 — CA-14, CA-10).
+        Route::post('close', [EventController::class, 'close'])->name('events.close');
+        Route::post('reopen', [EventController::class, 'reopen'])->name('events.reopen');
+        Route::get('audit', [EventController::class, 'audit'])->name('events.audit');
+
+        // Resolução de conflitos de representação (PRD §2.5, CA-06).
+        Route::get('conflicts', [ConflictController::class, 'index'])->name('conflicts.index');
+        Route::post('conflicts/{relationship}/resolve', [ConflictController::class, 'resolve'])->name('conflicts.resolve');
+
         Route::get('guests', [GuestController::class, 'index'])->name('guests.index');
         Route::post('guests', [GuestController::class, 'store'])->name('guests.store');
         Route::patch('guests/{guest}', [GuestController::class, 'update'])->name('guests.update');
