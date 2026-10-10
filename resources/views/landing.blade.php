@@ -13,9 +13,10 @@
 </head>
 <body class="bg-white antialiased">
 
-{{-- ╭──────────────────────────────────────────────╮
-     │  NAVBAR scroll-aware (Alpine)                  │
-     ╰──────────────────────────────────────────────╯ --}}
+{{-- Barra de progresso de leitura --}}
+<div id="scroll-progress" class="scroll-progress"></div>
+
+{{-- ╭── NAVBAR scroll-aware ──╮ --}}
 <header
     x-data="{ scrolled: false, open: false }"
     x-init="window.addEventListener('scroll', () => scrolled = window.scrollY > 24)"
@@ -27,7 +28,7 @@
             <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-institutional-600 text-white shadow-lg shadow-institutional-600/30">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             </span>
-            <span class="text-lg font-bold tracking-tight" :class="scrolled ? 'text-institutional-900' : 'text-white'">RSVP</span>
+            <span class="text-lg font-bold tracking-tight transition-colors" :class="scrolled ? 'text-institutional-900' : 'text-white'">RSVP</span>
         </a>
 
         <div class="hidden items-center gap-8 md:flex">
@@ -38,8 +39,7 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <a href="{{ route('login') }}"
-               class="cta-glow hidden rounded-xl bg-institutional-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-institutional-600/30 sm:inline-flex">
+            <a href="{{ route('login') }}" class="cta-glow hidden rounded-xl bg-institutional-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-institutional-600/30 sm:inline-flex">
                 Acessar plataforma
             </a>
             <a href="{{ route('login') }}" class="rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors sm:hidden"
@@ -50,11 +50,12 @@
     </nav>
 </header>
 
-{{-- ╭──────────────────────────────────────────────╮
-     │  HERO                                          │
-     ╰──────────────────────────────────────────────╯ --}}
+{{-- ╭── HERO ──╮ --}}
 <section id="top" class="hero-mesh hero-grain relative overflow-hidden">
-    <div class="relative mx-auto max-w-7xl px-6 pb-24 pt-36 lg:px-8 lg:pt-44">
+    <div class="hero-orb hero-orb--1" data-parallax="0.12"></div>
+    <div class="hero-orb hero-orb--2" data-parallax="0.18"></div>
+
+    <div class="relative mx-auto max-w-7xl px-6 pb-28 pt-36 lg:px-8 lg:pt-44">
         <div class="mx-auto max-w-3xl text-center">
             <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-medium text-white/90 backdrop-blur">
                 <span class="live-dot inline-block h-2 w-2 rounded-full bg-emerald-400"></span>
@@ -73,8 +74,7 @@
             </p>
 
             <div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <a href="{{ route('login') }}"
-                   class="cta-glow inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-institutional-900 shadow-xl">
+                <a href="{{ route('login') }}" class="cta-glow inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-institutional-900 shadow-xl">
                     Acessar a plataforma
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </a>
@@ -84,33 +84,37 @@
             </div>
         </div>
 
-        {{-- Mock do painel — prova visual --}}
-        <div class="mx-auto mt-16 max-w-5xl">
+        {{-- Mock do painel com count-up --}}
+        <div class="reveal reveal-scale reveal-delay-2 mx-auto mt-16 max-w-5xl">
             <div class="rounded-2xl border border-white/10 bg-white/[0.06] p-2 shadow-2xl backdrop-blur">
-                <div class="grid grid-cols-2 gap-3 rounded-xl bg-institutional-900/60 p-4 sm:grid-cols-3 lg:grid-cols-5">
+                <div class="stagger grid grid-cols-2 gap-3 rounded-xl bg-institutional-900/60 p-4 sm:grid-cols-3 lg:grid-cols-5">
                     @foreach ([
-                        ['Confirmados', '128', 'Titulares'],
-                        ['Acompanhantes', '36', 'Vinculados'],
-                        ['Representantes', '12', 'Substituições'],
-                        ['Não confirmados', '44', 'Pendentes'],
-                        ['Presenças', '96', 'Credenciados'],
+                        ['Confirmados', 128, 'Titulares'],
+                        ['Acompanhantes', 36, 'Vinculados'],
+                        ['Representantes', 12, 'Substituições'],
+                        ['Não confirmados', 44, 'Pendentes'],
+                        ['Presenças', 96, 'Credenciados'],
                     ] as $card)
                         <div class="rounded-lg border border-white/10 bg-white/[0.04] p-4 text-left">
                             <p class="text-[11px] font-medium uppercase tracking-wide text-white/50">{{ $card[0] }}</p>
-                            <p class="mt-1 text-2xl font-bold text-white">{{ $card[1] }}</p>
+                            <p class="countup mt-1 text-2xl font-bold text-white" data-countup="{{ $card[1] }}">0</p>
                             <p class="text-[11px] text-white/40">{{ $card[2] }}</p>
                         </div>
                     @endforeach
                 </div>
             </div>
-            <div class="accent-line mt-4 rounded-full"></div>
         </div>
+    </div>
+
+    {{-- Onda de transição para a próxima seção --}}
+    <div class="section-wave" aria-hidden="true">
+        <svg viewBox="0 0 1440 80" preserveAspectRatio="none" class="h-12 w-full sm:h-20">
+            <path fill="#f6f9fc" d="M0,32 C360,96 1080,0 1440,48 L1440,80 L0,80 Z"></path>
+        </svg>
     </div>
 </section>
 
-{{-- ╭──────────────────────────────────────────────╮
-     │  RECURSOS — os 5 diferenciais do produto       │
-     ╰──────────────────────────────────────────────╯ --}}
+{{-- ╭── RECURSOS ──╮ --}}
 <section id="recursos" class="bg-institutional-neutral py-24">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="reveal mx-auto max-w-2xl text-center">
@@ -123,7 +127,7 @@
             </p>
         </div>
 
-        <div class="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div class="stagger mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             @php
                 $features = [
                     ['M3 12h18M3 6h18M3 18h18', 'RSVP ≠ Presença', 'Confirmar participação não é comparecer. Estados distintos de RSVP (pendente, confirmado, recusado) e de presença física, com credenciamento próprio.'],
@@ -135,9 +139,9 @@
                 ];
             @endphp
 
-            @foreach ($features as $i => $f)
-                <article class="feature-card reveal reveal-delay-{{ ($i % 3) + 1 }} group rounded-2xl border border-institutional-900/8 bg-white p-7 shadow-sm">
-                    <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-institutional-600/8 text-institutional-600 transition-colors group-hover:bg-institutional-600 group-hover:text-white">
+            @foreach ($features as $f)
+                <article class="feature-card group rounded-2xl border border-institutional-900/8 bg-white p-7 shadow-sm">
+                    <span class="feature-icon flex h-12 w-12 items-center justify-center rounded-xl bg-institutional-600/8 text-institutional-600 group-hover:bg-institutional-600 group-hover:text-white">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $f[0] }}"/></svg>
                     </span>
                     <h3 class="mt-5 text-lg font-semibold text-institutional-900">{{ $f[1] }}</h3>
@@ -148,9 +152,9 @@
     </div>
 </section>
 
-{{-- ╭──────────────────────────────────────────────╮
-     │  FLUXO — como funciona                         │
-     ╰──────────────────────────────────────────────╯ --}}
+<div class="section-divider" aria-hidden="true"></div>
+
+{{-- ╭── FLUXO ──╮ --}}
 <section id="fluxo" class="py-24">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="reveal mx-auto max-w-2xl text-center">
@@ -158,7 +162,7 @@
             <h2 class="mt-3 text-3xl font-bold tracking-tight text-institutional-900 sm:text-4xl">Um fluxo direto, sem ambiguidades</h2>
         </div>
 
-        <ol class="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <ol class="stagger mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             @php
                 $steps = [
                     ['01', 'Cadastre ou importe', 'Adicione convidados manualmente ou importe listas com pré-visualização e validação de vínculos.'],
@@ -167,8 +171,8 @@
                     ['04', 'Acompanhe e audite', 'Indicadores em tempo real, exportação Excel/PDF e auditoria de cada operação relevante.'],
                 ];
             @endphp
-            @foreach ($steps as $i => $s)
-                <li class="reveal reveal-delay-{{ min($i + 1, 3) }} relative rounded-2xl border border-institutional-900/8 bg-institutional-neutral p-7">
+            @foreach ($steps as $s)
+                <li class="feature-card relative rounded-2xl border border-institutional-900/8 bg-institutional-neutral p-7">
                     <span class="text-4xl font-extrabold text-institutional-500/25">{{ $s[0] }}</span>
                     <h3 class="mt-3 text-lg font-semibold text-institutional-900">{{ $s[1] }}</h3>
                     <p class="mt-2 text-sm leading-relaxed text-institutional-text/70">{{ $s[2] }}</p>
@@ -178,13 +182,11 @@
     </div>
 </section>
 
-{{-- ╭──────────────────────────────────────────────╮
-     │  INDICADORES — prova de valor                  │
-     ╰──────────────────────────────────────────────╯ --}}
-<section id="indicadores" class="bg-institutional-900 py-24">
+{{-- ╭── INDICADORES ──╮ --}}
+<section id="indicadores" class="hero-mesh relative overflow-hidden py-24">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
-            <div class="reveal">
+            <div class="reveal reveal-left">
                 <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
                     Totais que representam <span class="text-gradient">pessoas únicas</span>
                 </h2>
@@ -199,7 +201,7 @@
                 </a>
             </div>
 
-            <div class="reveal reveal-delay-2 grid grid-cols-2 gap-4">
+            <div class="stagger grid grid-cols-2 gap-4">
                 @foreach ([
                     ['Participação prevista', '176 / 200', '88% do público estimado'],
                     ['Taxa de comparecimento', '72%', 'credenciados sobre previstos'],
@@ -217,16 +219,14 @@
     </div>
 </section>
 
-{{-- ╭──────────────────────────────────────────────╮
-     │  FAQ accordion (Alpine)                        │
-     ╰──────────────────────────────────────────────╯ --}}
+{{-- ╭── FAQ ──╮ --}}
 <section id="faq" class="py-24">
     <div class="mx-auto max-w-3xl px-6 lg:px-8">
         <div class="reveal text-center">
             <h2 class="text-3xl font-bold tracking-tight text-institutional-900 sm:text-4xl">Dúvidas frequentes</h2>
         </div>
 
-        <div class="mt-12 divide-y divide-institutional-900/10" x-data="{ open: 0 }">
+        <div class="reveal mt-12 divide-y divide-institutional-900/10" x-data="{ open: 0 }">
             @php
                 $faqs = [
                     ['Qual a diferença entre RSVP e presença?', 'RSVP é a confirmação de participação (pendente, confirmado ou não participará). Presença é o comparecimento físico, registrado no credenciamento. São processos independentes — confirmar não significa comparecer.'],
@@ -237,22 +237,12 @@
                 ];
             @endphp
             @foreach ($faqs as $i => $faq)
-                <div class="reveal">
-                    <button
-                        @click="open === {{ $i }} ? open = null : open = {{ $i }}"
-                        class="flex w-full items-center justify-between gap-4 py-5 text-left"
-                    >
+                <div>
+                    <button @click="open === {{ $i }} ? open = null : open = {{ $i }}" class="flex w-full items-center justify-between gap-4 py-5 text-left">
                         <span class="text-base font-semibold text-institutional-900">{{ $faq[0] }}</span>
-                        <svg class="h-5 w-5 shrink-0 text-institutional-500 transition-transform duration-300"
-                             :class="open === {{ $i }} ? 'rotate-45' : ''"
-                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                        <svg class="h-5 w-5 shrink-0 text-institutional-500 transition-transform duration-300" :class="open === {{ $i }} ? 'rotate-45' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
                     </button>
-                    <div x-show="open === {{ $i }}"
-                         x-collapse.duration.300ms
-                         x-transition:enter="transition ease-out duration-300"
-                         x-transition:enter-start="opacity-0"
-                         x-transition:enter-end="opacity-100"
-                         x-cloak>
+                    <div x-show="open === {{ $i }}" x-collapse x-cloak>
                         <p class="pb-5 text-sm leading-relaxed text-institutional-text/70">{{ $faq[1] }}</p>
                     </div>
                 </div>
@@ -261,11 +251,10 @@
     </div>
 </section>
 
-{{-- ╭──────────────────────────────────────────────╮
-     │  CTA final                                     │
-     ╰──────────────────────────────────────────────╯ --}}
+{{-- ╭── CTA final ──╮ --}}
 <section class="px-6 pb-24 lg:px-8">
-    <div class="hero-mesh hero-grain reveal relative mx-auto max-w-5xl overflow-hidden rounded-3xl px-8 py-16 text-center shadow-2xl">
+    <div class="hero-mesh hero-grain reveal reveal-scale relative mx-auto max-w-5xl overflow-hidden rounded-3xl px-8 py-16 text-center shadow-2xl">
+        <div class="hero-orb hero-orb--1" style="opacity:.35"></div>
         <h2 class="relative text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Pronto para operar seu próximo evento?
         </h2>
@@ -273,17 +262,14 @@
             Entre na plataforma e gerencie convidados, confirmações e presença com a precisão
             que eventos reais exigem.
         </p>
-        <a href="{{ route('login') }}"
-           class="cta-glow relative mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-institutional-900 shadow-xl">
+        <a href="{{ route('login') }}" class="cta-glow relative mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-institutional-900 shadow-xl">
             Acessar a plataforma
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
     </div>
 </section>
 
-{{-- ╭──────────────────────────────────────────────╮
-     │  FOOTER                                        │
-     ╰──────────────────────────────────────────────╯ --}}
+{{-- ╭── FOOTER ──╮ --}}
 <footer class="border-t border-institutional-900/10 bg-institutional-neutral">
     <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-10 sm:flex-row lg:px-8">
         <div class="flex items-center gap-2.5">
