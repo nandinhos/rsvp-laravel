@@ -8,6 +8,7 @@ use App\Enums\RsvpStatus;
 use App\Models\Event;
 use App\Models\Guest;
 use App\Models\GuestCategory;
+use App\Services\GuestNumberAllocator;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -43,5 +44,22 @@ class GuestFactory extends Factory
             'attendance_status' => AttendanceStatus::Presente,
             'checked_in_at' => now(),
         ]);
+    }
+
+    /**
+     * Cria o convidado em um evento com categoria pertencente ao MESMO evento,
+     * atribuindo numeração sequencial via GuestNumberAllocator.
+     */
+    public function inEvent(Event $event): static
+    {
+        return $this->state(function () use ($event) {
+            $category = GuestCategory::factory()->for($event)->create();
+
+            return [
+                'event_id' => $event->id,
+                'guest_category_id' => $category->id,
+                'number' => app(GuestNumberAllocator::class)->next($event),
+            ];
+        });
     }
 }
