@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, watch } from 'vue';
-import { router, Head } from '@inertiajs/vue3';
+import { router, Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 const props = defineProps({
@@ -68,9 +68,18 @@ const attendanceBadge = {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                {{ event.name }} — Convidados
-            </h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    {{ event.name }} — Convidados
+                </h2>
+                <Link
+                    v-if="can.manageGuests"
+                    :href="route('guests.import.create', event.id)"
+                    class="rounded-md bg-sky-700 px-3 py-2 text-sm font-medium text-white hover:bg-sky-800"
+                >
+                    Importar
+                </Link>
+            </div>
         </template>
 
         <div class="py-6">
