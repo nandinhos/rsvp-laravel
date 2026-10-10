@@ -1,0 +1,62 @@
+# Stack encapsulada do sistema RSVP.
+# Portas de host escolhidas para NÃO conflitar com serviços existentes:
+#   - app:   8900  (host) -> 8000 (container)
+#   - pgsql: 55432 (host) -> 5432 (container)
+# A comunicação app<->db usa a rede interna 'rsvp-net' pelo hostname 'pgsql'.
+
+services:
+  pgsql:
+    image: postgres:16-alpine
+    container_name: rsvp_pgsql
+    environment:
+      POSTGRES_DB: rsvp_kiro
+      POSTGRES_USER: rsvp
+      POSTGRES_PASSWORD: rsvp
+    ports:
+      - "55432:5432"
+    volumes:
+      - rsvp-pgdata:/var/lib/postgresql/data
+    networks:
+      - rsvp-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rsvp -d rsvp_kiro"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rsvp_app
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    environment:
+      APP_NAME: "RSVP"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: "base64:G8h84OXTAIT5o75JkrGnTCcM8uTxsitfs4rGdb7+G4o="
+      APP_URL: "http://localhost:8900"
+      APP_LOCALE: pt_BR
+      DB_CONNECTION: pgsql
+      DB_HOST: pgsql
+      DB_PORT: "5432"
+      DB_DATABASE: rsvp_kiro
+      DB_USERNAME: rsvp
+      DB_PASSWORD: rsvp
+      SESSION_DRIVER: database
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      DB_SEED: "true"
+    ports:
+      - "8900:8000"
+    networks:
+      - rsvp-net
+
+networks:
+  rsvp-net:
+    driver: bridge
+
+volumes:
+  rsvp-pgdata:
