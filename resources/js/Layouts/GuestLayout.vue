@@ -1,5 +1,5 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+//
 </script>
 
 <template>
@@ -7,12 +7,13 @@ import { Link } from '@inertiajs/vue3';
         <!-- Painel institucional (esquerda) -->
         <aside class="auth-hero relative hidden w-1/2 flex-col justify-between overflow-hidden p-12 lg:flex">
             <div class="relative z-10">
-                <Link href="/" class="inline-flex items-center gap-2.5">
+                <!-- âncora normal: a landing (/) é página Blade, fora do contexto Inertia -->
+                <a href="/" class="inline-flex items-center gap-2.5">
                     <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
                     </span>
                     <span class="text-xl font-bold tracking-tight text-white">RSVP</span>
-                </Link>
+                </a>
             </div>
 
             <div class="relative z-10 max-w-md">
@@ -45,12 +46,12 @@ import { Link } from '@inertiajs/vue3';
         <main class="flex w-full flex-col items-center justify-center px-6 py-12 lg:w-1/2">
             <div class="w-full max-w-md">
                 <!-- Branding mobile -->
-                <Link href="/" class="mb-8 inline-flex items-center gap-2.5 lg:hidden">
+                <a href="/" class="mb-8 inline-flex items-center gap-2.5 lg:hidden">
                     <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-institutional-base text-white">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
                     </span>
                     <span class="text-xl font-bold tracking-tight text-institutional-deep">RSVP</span>
-                </Link>
+                </a>
 
                 <div class="rounded-2xl border border-institutional-deep/10 bg-white p-8 shadow-xl shadow-institutional-deep/5">
                     <slot />
