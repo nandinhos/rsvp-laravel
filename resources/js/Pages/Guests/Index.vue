@@ -1,7 +1,11 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
-import { router, Head, Link, useForm } from '@inertiajs/vue3';
+import { router, Head, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import UiButton from '@/Components/ui/UiButton.vue';
+import UiBadge from '@/Components/ui/UiBadge.vue';
+import UiCard from '@/Components/ui/UiCard.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
 
 const props = defineProps({
     event: Object,
@@ -76,15 +80,18 @@ function act(name, guestId) {
     );
 }
 
-const rsvpBadge = {
-    pendente: 'bg-amber-100 text-amber-800',
-    confirmado: 'bg-emerald-100 text-emerald-800',
-    nao_participara: 'bg-rose-100 text-rose-800',
+const rsvpVariant = {
+    pendente: 'warning',
+    confirmado: 'success',
+    nao_participara: 'danger',
 };
-const attendanceBadge = {
-    aguardando: 'bg-slate-100 text-slate-700',
-    presente: 'bg-sky-100 text-sky-800',
+const attendanceVariant = {
+    aguardando: 'neutral',
+    presente: 'info',
 };
+
+const inputClass =
+    'w-full rounded-xl border-institutional-900/15 text-sm shadow-sm transition-colors focus:border-institutional-500 focus:ring-institutional-500';
 </script>
 
 <template>
@@ -92,35 +99,15 @@ const attendanceBadge = {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-xl font-semibold leading-tight text-institutional-900">
                     {{ event.name }} — Convidados
                 </h2>
-                <div class="flex gap-2">
-                    <a
-                        v-if="can.export"
-                        :href="exportUrl('guests.export.excel')"
-                        class="rounded-md border border-sky-700 px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50"
-                    >Excel</a>
-                    <a
-                        v-if="can.export"
-                        :href="exportUrl('guests.export.pdf')"
-                        class="rounded-md border border-sky-700 px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50"
-                    >PDF</a>
-                    <Link
-                        v-if="can.manageGuests"
-                        :href="route('guests.import.create', event.id)"
-                        class="rounded-md bg-sky-700 px-3 py-2 text-sm font-medium text-white hover:bg-sky-800"
-                    >
-                        Importar
-                    </Link>
-                    <button
-                        v-if="can.manageGuests"
-                        @click="showCreate = !showCreate"
-                        class="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-                    >
-                        Novo convidado
-                    </button>
+                <div class="flex flex-wrap gap-2">
+                    <UiButton v-if="can.export" :href="exportUrl('guests.export.excel')" variant="secondary" size="md">Excel</UiButton>
+                    <UiButton v-if="can.export" :href="exportUrl('guests.export.pdf')" variant="secondary" size="md">PDF</UiButton>
+                    <UiButton v-if="can.manageGuests" :href="route('guests.import.create', event.id)" variant="primary">Importar</UiButton>
+                    <UiButton v-if="can.manageGuests" variant="success" @click="showCreate = !showCreate">Novo convidado</UiButton>
                 </div>
             </div>
         </template>
@@ -128,37 +115,35 @@ const attendanceBadge = {
         <div class="py-6">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <!-- Formulário de cadastro manual (PRD §6-C) -->
-                <div v-if="showCreate && can.manageGuests" class="mb-4 rounded-lg bg-white p-5 shadow">
-                    <h3 class="mb-3 font-semibold text-gray-900">Novo convidado</h3>
+                <UiCard v-if="showCreate && can.manageGuests" padding="p-6" class="mb-4">
+                    <h3 class="mb-4 font-semibold text-institutional-900">Novo convidado</h3>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-gray-600">Nome completo</label>
-                            <input v-model="createForm.full_name" type="text" class="w-full rounded-md border-gray-300 text-sm shadow-sm" />
+                            <label class="mb-1 block text-xs font-medium text-institutional-text/60">Nome completo</label>
+                            <input v-model="createForm.full_name" type="text" :class="inputClass" />
                             <p v-if="createForm.errors.full_name" class="mt-1 text-xs text-rose-600">{{ createForm.errors.full_name }}</p>
                         </div>
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-gray-600">Categoria</label>
-                            <select v-model="createForm.guest_category_id" class="w-full rounded-md border-gray-300 text-sm shadow-sm">
+                            <label class="mb-1 block text-xs font-medium text-institutional-text/60">Categoria</label>
+                            <select v-model="createForm.guest_category_id" :class="inputClass">
                                 <option value="">Selecione…</option>
                                 <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
                             </select>
                             <p v-if="createForm.errors.guest_category_id" class="mt-1 text-xs text-rose-600">{{ createForm.errors.guest_category_id }}</p>
                         </div>
                         <div>
-                            <label class="mb-1 block text-xs font-medium text-gray-600">Confirmação</label>
-                            <select v-model="createForm.rsvp_status" class="w-full rounded-md border-gray-300 text-sm shadow-sm">
+                            <label class="mb-1 block text-xs font-medium text-institutional-text/60">Confirmação</label>
+                            <select v-model="createForm.rsvp_status" :class="inputClass">
                                 <option v-for="o in options.rsvp" :key="o.value" :value="o.value">{{ o.label }}</option>
                             </select>
                         </div>
                         <div class="flex items-end">
-                            <button
-                                @click="submitCreate"
-                                :disabled="createForm.processing"
-                                class="w-full rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                            >Adicionar</button>
+                            <UiButton variant="success" class="w-full" :disabled="createForm.processing" @click="submitCreate">
+                                Adicionar
+                            </UiButton>
                         </div>
                     </div>
-                </div>
+                </UiCard>
 
                 <!-- Busca e filtros -->
                 <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -167,35 +152,30 @@ const attendanceBadge = {
                         type="search"
                         placeholder="Buscar por nome ou número"
                         aria-label="Buscar convidado"
-                        class="rounded-md border-gray-300 text-sm shadow-sm focus:border-sky-500 focus:ring-sky-500 lg:col-span-2"
+                        :class="[inputClass, 'lg:col-span-2']"
                     />
-                    <select v-model="form.category" aria-label="Filtrar por categoria" class="rounded-md border-gray-300 text-sm shadow-sm">
+                    <select v-model="form.category" aria-label="Filtrar por categoria" :class="inputClass">
                         <option value="">Todas as categorias</option>
                         <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
                     </select>
-                    <select v-model="form.rsvp" aria-label="Filtrar por confirmação" class="rounded-md border-gray-300 text-sm shadow-sm">
+                    <select v-model="form.rsvp" aria-label="Filtrar por confirmação" :class="inputClass">
                         <option value="">Qualquer confirmação</option>
                         <option v-for="o in options.rsvp" :key="o.value" :value="o.value">{{ o.label }}</option>
                     </select>
-                    <select v-model="form.attendance" aria-label="Filtrar por presença" class="rounded-md border-gray-300 text-sm shadow-sm">
+                    <select v-model="form.attendance" aria-label="Filtrar por presença" :class="inputClass">
                         <option value="">Qualquer presença</option>
                         <option v-for="o in options.attendance" :key="o.value" :value="o.value">{{ o.label }}</option>
                     </select>
                 </div>
 
                 <!-- Estado vazio -->
-                <div
-                    v-if="guests.data.length === 0"
-                    class="rounded-lg border border-dashed border-gray-300 bg-white p-10 text-center text-gray-500"
-                >
-                    Nenhum convidado encontrado com os filtros atuais.
-                </div>
+                <EmptyState v-if="guests.data.length === 0" message="Nenhum convidado encontrado com os filtros atuais." />
 
                 <!-- Tabela (desktop) -->
-                <div v-else class="hidden overflow-hidden rounded-lg bg-white shadow md:block">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <div v-else class="hidden overflow-hidden rounded-2xl border border-institutional-900/8 bg-white shadow-sm md:block">
+                    <table class="min-w-full divide-y divide-institutional-900/8">
+                        <thead class="bg-institutional-50">
+                            <tr class="text-left text-xs font-semibold uppercase tracking-wide text-institutional-text/50">
                                 <th class="px-4 py-3">#</th>
                                 <th class="px-4 py-3">Nome</th>
                                 <th class="px-4 py-3">Categoria</th>
@@ -205,39 +185,19 @@ const attendanceBadge = {
                                 <th class="px-4 py-3 text-right">Ações</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-for="g in guests.data" :key="g.id" class="text-sm text-gray-700">
-                                <td class="px-4 py-3 font-mono text-gray-500">{{ g.number }}</td>
-                                <td class="px-4 py-3 font-medium text-gray-900">{{ g.full_name }}</td>
+                        <tbody class="divide-y divide-institutional-900/6">
+                            <tr v-for="g in guests.data" :key="g.id" class="text-sm text-institutional-text transition-colors hover:bg-institutional-50/60">
+                                <td class="px-4 py-3 font-mono text-institutional-text/40">{{ g.number }}</td>
+                                <td class="px-4 py-3 font-medium text-institutional-900">{{ g.full_name }}</td>
                                 <td class="px-4 py-3">{{ g.category }}</td>
                                 <td class="px-4 py-3">{{ g.role_label }}</td>
-                                <td class="px-4 py-3">
-                                    <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="rsvpBadge[g.rsvp_status]">
-                                        {{ g.rsvp_label }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="attendanceBadge[g.attendance_status]">
-                                        {{ g.attendance_label }}
-                                    </span>
-                                </td>
+                                <td class="px-4 py-3"><UiBadge :variant="rsvpVariant[g.rsvp_status]">{{ g.rsvp_label }}</UiBadge></td>
+                                <td class="px-4 py-3"><UiBadge :variant="attendanceVariant[g.attendance_status]">{{ g.attendance_label }}</UiBadge></td>
                                 <td class="px-4 py-3 text-right">
                                     <div v-if="can.operate" class="inline-flex gap-2">
-                                        <button
-                                            v-if="g.rsvp_status !== 'confirmado'"
-                                            @click="act('guests.confirm', g.id)"
-                                            class="rounded bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
-                                        >Confirmar</button>
-                                        <button
-                                            v-if="g.rsvp_status !== 'nao_participara'"
-                                            @click="act('guests.decline', g.id)"
-                                            class="rounded bg-rose-600 px-2 py-1 text-xs font-medium text-white hover:bg-rose-700"
-                                        >Recusar</button>
-                                        <button
-                                            v-if="g.attendance_status !== 'presente'"
-                                            @click="act('guests.check-in', g.id)"
-                                            class="rounded bg-sky-700 px-2 py-1 text-xs font-medium text-white hover:bg-sky-800"
-                                        >Check-in</button>
+                                        <UiButton v-if="g.rsvp_status !== 'confirmado'" size="sm" variant="success" @click="act('guests.confirm', g.id)">Confirmar</UiButton>
+                                        <UiButton v-if="g.rsvp_status !== 'nao_participara'" size="sm" variant="danger" @click="act('guests.decline', g.id)">Recusar</UiButton>
+                                        <UiButton v-if="g.attendance_status !== 'presente'" size="sm" variant="primary" @click="act('guests.check-in', g.id)">Check-in</UiButton>
                                     </div>
                                 </td>
                             </tr>
@@ -247,25 +207,25 @@ const attendanceBadge = {
 
                 <!-- Cartões (mobile) -->
                 <div v-if="guests.data.length" class="space-y-3 md:hidden">
-                    <div v-for="g in guests.data" :key="g.id" class="rounded-lg bg-white p-4 shadow">
+                    <UiCard v-for="g in guests.data" :key="g.id" padding="p-4">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="font-medium text-gray-900">
-                                    <span class="font-mono text-gray-400">#{{ g.number }}</span>
+                                <p class="font-medium text-institutional-900">
+                                    <span class="font-mono text-institutional-text/40">#{{ g.number }}</span>
                                     {{ g.full_name }}
                                 </p>
-                                <p class="text-sm text-gray-500">{{ g.category }} · {{ g.role_label }}</p>
+                                <p class="text-sm text-institutional-text/60">{{ g.category }} · {{ g.role_label }}</p>
                             </div>
                         </div>
                         <div class="mt-2 flex gap-2">
-                            <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="rsvpBadge[g.rsvp_status]">{{ g.rsvp_label }}</span>
-                            <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="attendanceBadge[g.attendance_status]">{{ g.attendance_label }}</span>
+                            <UiBadge :variant="rsvpVariant[g.rsvp_status]">{{ g.rsvp_label }}</UiBadge>
+                            <UiBadge :variant="attendanceVariant[g.attendance_status]">{{ g.attendance_label }}</UiBadge>
                         </div>
                         <div v-if="can.operate" class="mt-3 flex gap-2">
-                            <button v-if="g.rsvp_status !== 'confirmado'" @click="act('guests.confirm', g.id)" class="flex-1 rounded bg-emerald-600 py-2 text-sm font-medium text-white">Confirmar</button>
-                            <button v-if="g.attendance_status !== 'presente'" @click="act('guests.check-in', g.id)" class="flex-1 rounded bg-sky-700 py-2 text-sm font-medium text-white">Check-in</button>
+                            <UiButton v-if="g.rsvp_status !== 'confirmado'" variant="success" class="flex-1" @click="act('guests.confirm', g.id)">Confirmar</UiButton>
+                            <UiButton v-if="g.attendance_status !== 'presente'" variant="primary" class="flex-1" @click="act('guests.check-in', g.id)">Check-in</UiButton>
                         </div>
-                    </div>
+                    </UiCard>
                 </div>
 
                 <!-- Paginação -->
@@ -275,8 +235,8 @@ const attendanceBadge = {
                         v-for="(link, i) in guests.links"
                         :key="i"
                         @click="link.url && router.visit(link.url, { preserveState: true, preserveScroll: true })"
-                        class="rounded px-3 py-1 text-sm"
-                        :class="link.active ? 'bg-sky-700 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'"
+                        class="rounded-lg px-3 py-1 text-sm transition-colors"
+                        :class="link.active ? 'bg-institutional-600 text-white' : 'bg-white text-institutional-text/70 hover:bg-institutional-50'"
                         v-html="link.label"
                     />
                 </div>

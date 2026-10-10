@@ -24,26 +24,26 @@
 >
     <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
         <a href="#top" class="flex items-center gap-2.5">
-            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1c4e80] text-white shadow-lg shadow-[#1c4e80]/30">
+            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-institutional-600 text-white shadow-lg shadow-institutional-600/30">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             </span>
-            <span class="text-lg font-bold tracking-tight" :class="scrolled ? 'text-[#0b2a4a]' : 'text-white'">RSVP</span>
+            <span class="text-lg font-bold tracking-tight" :class="scrolled ? 'text-institutional-900' : 'text-white'">RSVP</span>
         </a>
 
         <div class="hidden items-center gap-8 md:flex">
-            <a href="#recursos" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-[#182738] hover:text-[#276ca3]' : 'text-white/80 hover:text-white'">Recursos</a>
-            <a href="#fluxo" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-[#182738] hover:text-[#276ca3]' : 'text-white/80 hover:text-white'">Como funciona</a>
-            <a href="#indicadores" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-[#182738] hover:text-[#276ca3]' : 'text-white/80 hover:text-white'">Indicadores</a>
-            <a href="#faq" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-[#182738] hover:text-[#276ca3]' : 'text-white/80 hover:text-white'">Dúvidas</a>
+            <a href="#recursos" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-institutional-text hover:text-institutional-500' : 'text-white/80 hover:text-white'">Recursos</a>
+            <a href="#fluxo" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-institutional-text hover:text-institutional-500' : 'text-white/80 hover:text-white'">Como funciona</a>
+            <a href="#indicadores" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-institutional-text hover:text-institutional-500' : 'text-white/80 hover:text-white'">Indicadores</a>
+            <a href="#faq" class="text-sm font-medium transition-colors" :class="scrolled ? 'text-institutional-text hover:text-institutional-500' : 'text-white/80 hover:text-white'">Dúvidas</a>
         </div>
 
         <div class="flex items-center gap-3">
             <a href="{{ route('login') }}"
-               class="cta-glow hidden rounded-xl bg-[#1c4e80] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#1c4e80]/30 sm:inline-flex">
+               class="cta-glow hidden rounded-xl bg-institutional-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-institutional-600/30 sm:inline-flex">
                 Acessar plataforma
             </a>
             <a href="{{ route('login') }}" class="rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors sm:hidden"
-               :class="scrolled ? 'border-[#1c4e80] text-[#1c4e80]' : 'border-white/40 text-white'">
+               :class="scrolled ? 'border-institutional-600 text-institutional-600' : 'border-white/40 text-white'">
                 Entrar
             </a>
         </div>
@@ -74,7 +74,7 @@
 
             <div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a href="{{ route('login') }}"
-                   class="cta-glow inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-[#0b2a4a] shadow-xl">
+                   class="cta-glow inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-institutional-900 shadow-xl">
                     Acessar a plataforma
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </a>
@@ -87,7 +87,7 @@
         {{-- Mock do painel — prova visual --}}
         <div class="mx-auto mt-16 max-w-5xl">
             <div class="rounded-2xl border border-white/10 bg-white/[0.06] p-2 shadow-2xl backdrop-blur">
-                <div class="grid grid-cols-2 gap-3 rounded-xl bg-[#0b2a4a]/60 p-4 sm:grid-cols-3 lg:grid-cols-5">
+                <div class="grid grid-cols-2 gap-3 rounded-xl bg-institutional-900/60 p-4 sm:grid-cols-3 lg:grid-cols-5">
                     @foreach ([
                         ['Confirmados', '128', 'Titulares'],
                         ['Acompanhantes', '36', 'Vinculados'],
@@ -111,14 +111,14 @@
 {{-- ╭──────────────────────────────────────────────╮
      │  RECURSOS — os 5 diferenciais do produto       │
      ╰──────────────────────────────────────────────╯ --}}
-<section id="recursos" class="bg-[#f6f9fc] py-24">
+<section id="recursos" class="bg-institutional-neutral py-24">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="reveal mx-auto max-w-2xl text-center">
-            <p class="text-sm font-semibold uppercase tracking-wider text-[#276ca3]">Precisão operacional</p>
-            <h2 class="mt-3 text-3xl font-bold tracking-tight text-[#0b2a4a] sm:text-4xl">
+            <p class="text-sm font-semibold uppercase tracking-wider text-institutional-500">Precisão operacional</p>
+            <h2 class="mt-3 text-3xl font-bold tracking-tight text-institutional-900 sm:text-4xl">
                 Cinco decisões que resolvem a maior parte dos erros de contagem
             </h2>
-            <p class="mt-4 text-lg text-[#182738]/70">
+            <p class="mt-4 text-lg text-institutional-text/70">
                 Cada funcionalidade existe para manter a integridade da informação — sem complexidade artificial.
             </p>
         </div>
@@ -136,12 +136,12 @@
             @endphp
 
             @foreach ($features as $i => $f)
-                <article class="feature-card reveal reveal-delay-{{ ($i % 3) + 1 }} group rounded-2xl border border-[#0b2a4a]/8 bg-white p-7 shadow-sm">
-                    <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1c4e80]/8 text-[#1c4e80] transition-colors group-hover:bg-[#1c4e80] group-hover:text-white">
+                <article class="feature-card reveal reveal-delay-{{ ($i % 3) + 1 }} group rounded-2xl border border-institutional-900/8 bg-white p-7 shadow-sm">
+                    <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-institutional-600/8 text-institutional-600 transition-colors group-hover:bg-institutional-600 group-hover:text-white">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $f[0] }}"/></svg>
                     </span>
-                    <h3 class="mt-5 text-lg font-semibold text-[#0b2a4a]">{{ $f[1] }}</h3>
-                    <p class="mt-2 text-sm leading-relaxed text-[#182738]/70">{{ $f[2] }}</p>
+                    <h3 class="mt-5 text-lg font-semibold text-institutional-900">{{ $f[1] }}</h3>
+                    <p class="mt-2 text-sm leading-relaxed text-institutional-text/70">{{ $f[2] }}</p>
                 </article>
             @endforeach
         </div>
@@ -154,8 +154,8 @@
 <section id="fluxo" class="py-24">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="reveal mx-auto max-w-2xl text-center">
-            <p class="text-sm font-semibold uppercase tracking-wider text-[#276ca3]">Do convite ao credenciamento</p>
-            <h2 class="mt-3 text-3xl font-bold tracking-tight text-[#0b2a4a] sm:text-4xl">Um fluxo direto, sem ambiguidades</h2>
+            <p class="text-sm font-semibold uppercase tracking-wider text-institutional-500">Do convite ao credenciamento</p>
+            <h2 class="mt-3 text-3xl font-bold tracking-tight text-institutional-900 sm:text-4xl">Um fluxo direto, sem ambiguidades</h2>
         </div>
 
         <ol class="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
@@ -168,10 +168,10 @@
                 ];
             @endphp
             @foreach ($steps as $i => $s)
-                <li class="reveal reveal-delay-{{ min($i + 1, 3) }} relative rounded-2xl border border-[#0b2a4a]/8 bg-[#f6f9fc] p-7">
-                    <span class="text-4xl font-extrabold text-[#276ca3]/25">{{ $s[0] }}</span>
-                    <h3 class="mt-3 text-lg font-semibold text-[#0b2a4a]">{{ $s[1] }}</h3>
-                    <p class="mt-2 text-sm leading-relaxed text-[#182738]/70">{{ $s[2] }}</p>
+                <li class="reveal reveal-delay-{{ min($i + 1, 3) }} relative rounded-2xl border border-institutional-900/8 bg-institutional-neutral p-7">
+                    <span class="text-4xl font-extrabold text-institutional-500/25">{{ $s[0] }}</span>
+                    <h3 class="mt-3 text-lg font-semibold text-institutional-900">{{ $s[1] }}</h3>
+                    <p class="mt-2 text-sm leading-relaxed text-institutional-text/70">{{ $s[2] }}</p>
                 </li>
             @endforeach
         </ol>
@@ -181,7 +181,7 @@
 {{-- ╭──────────────────────────────────────────────╮
      │  INDICADORES — prova de valor                  │
      ╰──────────────────────────────────────────────╯ --}}
-<section id="indicadores" class="bg-[#0b2a4a] py-24">
+<section id="indicadores" class="bg-institutional-900 py-24">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
             <div class="reveal">
@@ -193,7 +193,7 @@
                     sem dupla contagem. Conflitos de vínculo são sinalizados para resolução explícita —
                     nunca silenciosa.
                 </p>
-                <a href="{{ route('login') }}" class="cta-glow mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#0b2a4a]">
+                <a href="{{ route('login') }}" class="cta-glow mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-institutional-900">
                     Ver no painel
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </a>
@@ -223,10 +223,10 @@
 <section id="faq" class="py-24">
     <div class="mx-auto max-w-3xl px-6 lg:px-8">
         <div class="reveal text-center">
-            <h2 class="text-3xl font-bold tracking-tight text-[#0b2a4a] sm:text-4xl">Dúvidas frequentes</h2>
+            <h2 class="text-3xl font-bold tracking-tight text-institutional-900 sm:text-4xl">Dúvidas frequentes</h2>
         </div>
 
-        <div class="mt-12 divide-y divide-[#0b2a4a]/10" x-data="{ open: 0 }">
+        <div class="mt-12 divide-y divide-institutional-900/10" x-data="{ open: 0 }">
             @php
                 $faqs = [
                     ['Qual a diferença entre RSVP e presença?', 'RSVP é a confirmação de participação (pendente, confirmado ou não participará). Presença é o comparecimento físico, registrado no credenciamento. São processos independentes — confirmar não significa comparecer.'],
@@ -242,8 +242,8 @@
                         @click="open === {{ $i }} ? open = null : open = {{ $i }}"
                         class="flex w-full items-center justify-between gap-4 py-5 text-left"
                     >
-                        <span class="text-base font-semibold text-[#0b2a4a]">{{ $faq[0] }}</span>
-                        <svg class="h-5 w-5 shrink-0 text-[#276ca3] transition-transform duration-300"
+                        <span class="text-base font-semibold text-institutional-900">{{ $faq[0] }}</span>
+                        <svg class="h-5 w-5 shrink-0 text-institutional-500 transition-transform duration-300"
                              :class="open === {{ $i }} ? 'rotate-45' : ''"
                              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
                     </button>
@@ -253,7 +253,7 @@
                          x-transition:enter-start="opacity-0"
                          x-transition:enter-end="opacity-100"
                          x-cloak>
-                        <p class="pb-5 text-sm leading-relaxed text-[#182738]/70">{{ $faq[1] }}</p>
+                        <p class="pb-5 text-sm leading-relaxed text-institutional-text/70">{{ $faq[1] }}</p>
                     </div>
                 </div>
             @endforeach
@@ -274,7 +274,7 @@
             que eventos reais exigem.
         </p>
         <a href="{{ route('login') }}"
-           class="cta-glow relative mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-[#0b2a4a] shadow-xl">
+           class="cta-glow relative mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-institutional-900 shadow-xl">
             Acessar a plataforma
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
@@ -284,16 +284,16 @@
 {{-- ╭──────────────────────────────────────────────╮
      │  FOOTER                                        │
      ╰──────────────────────────────────────────────╯ --}}
-<footer class="border-t border-[#0b2a4a]/10 bg-[#f6f9fc]">
+<footer class="border-t border-institutional-900/10 bg-institutional-neutral">
     <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-10 sm:flex-row lg:px-8">
         <div class="flex items-center gap-2.5">
-            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1c4e80] text-white">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-institutional-600 text-white">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             </span>
-            <span class="font-bold text-[#0b2a4a]">RSVP</span>
+            <span class="font-bold text-institutional-900">RSVP</span>
         </div>
-        <p class="text-sm text-[#182738]/60">Gestão de convidados, confirmações e presença.</p>
-        <a href="{{ route('login') }}" class="text-sm font-semibold text-[#1c4e80] hover:text-[#276ca3]">Acessar plataforma →</a>
+        <p class="text-sm text-institutional-text/60">Gestão de convidados, confirmações e presença.</p>
+        <a href="{{ route('login') }}" class="text-sm font-semibold text-institutional-600 hover:text-institutional-500">Acessar plataforma →</a>
     </div>
 </footer>
 

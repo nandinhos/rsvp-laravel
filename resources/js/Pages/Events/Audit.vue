@@ -1,6 +1,8 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import UiButton from '@/Components/ui/UiButton.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
 
 defineProps({
     event: Object,
@@ -26,20 +28,18 @@ const actionLabel = {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">Auditoria — {{ event.name }}</h2>
-                <Link :href="route('events.dashboard', event.id)" class="text-sm text-sky-700 hover:underline">Voltar</Link>
+                <h2 class="text-xl font-semibold leading-tight text-institutional-900">Auditoria — {{ event.name }}</h2>
+                <UiButton :href="route('events.dashboard', event.id)" variant="ghost" size="md">Voltar</UiButton>
             </div>
         </template>
 
         <div class="py-6">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div v-if="logs.data.length === 0" class="rounded-lg border border-dashed border-gray-300 bg-white p-10 text-center text-gray-500">
-                    Nenhum registro de auditoria ainda.
-                </div>
+                <EmptyState v-if="logs.data.length === 0" message="Nenhum registro de auditoria ainda." />
 
-                <div v-else class="overflow-hidden rounded-lg bg-white shadow">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500">
+                <div v-else class="overflow-hidden rounded-2xl border border-institutional-900/8 bg-white shadow-sm">
+                    <table class="min-w-full divide-y divide-institutional-900/8 text-sm">
+                        <thead class="bg-institutional-50 text-left text-xs uppercase tracking-wide text-institutional-text/50">
                             <tr>
                                 <th class="px-4 py-3">Data/Hora</th>
                                 <th class="px-4 py-3">Ação</th>
@@ -47,12 +47,12 @@ const actionLabel = {
                                 <th class="px-4 py-3">Origem</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-for="log in logs.data" :key="log.id">
-                                <td class="whitespace-nowrap px-4 py-3 font-mono text-gray-500">{{ log.created_at }}</td>
-                                <td class="px-4 py-3 text-gray-900">{{ actionLabel[log.action] ?? log.action }}</td>
-                                <td class="px-4 py-3">{{ log.user }}</td>
-                                <td class="px-4 py-3 font-mono text-xs text-gray-400">{{ log.ip_address }}</td>
+                        <tbody class="divide-y divide-institutional-900/6">
+                            <tr v-for="log in logs.data" :key="log.id" class="transition-colors hover:bg-institutional-50/60">
+                                <td class="whitespace-nowrap px-4 py-3 font-mono text-institutional-text/50">{{ log.created_at }}</td>
+                                <td class="px-4 py-3 text-institutional-900">{{ actionLabel[log.action] ?? log.action }}</td>
+                                <td class="px-4 py-3 text-institutional-text/80">{{ log.user }}</td>
+                                <td class="px-4 py-3 font-mono text-xs text-institutional-text/40">{{ log.ip_address }}</td>
                             </tr>
                         </tbody>
                     </table>

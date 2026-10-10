@@ -1,15 +1,18 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import UiCard from '@/Components/ui/UiCard.vue';
+import UiBadge from '@/Components/ui/UiBadge.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
 
 defineProps({
     events: Array,
 });
 
-const statusBadge = {
-    rascunho: 'bg-slate-100 text-slate-700',
-    ativo: 'bg-emerald-100 text-emerald-800',
-    encerrado: 'bg-gray-200 text-gray-600',
+const statusVariant = {
+    rascunho: 'neutral',
+    ativo: 'success',
+    encerrado: 'neutral',
 };
 
 function formatDate(iso) {
@@ -26,48 +29,32 @@ function formatDate(iso) {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">Meus eventos</h2>
+            <h2 class="text-xl font-semibold leading-tight text-institutional-900">Meus eventos</h2>
         </template>
 
         <div class="py-6">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div
-                    v-if="events.length === 0"
-                    class="rounded-lg border border-dashed border-gray-300 bg-white p-10 text-center text-gray-500"
-                >
-                    Você ainda não tem acesso a nenhum evento.
-                </div>
+                <EmptyState v-if="events.length === 0" message="Você ainda não tem acesso a nenhum evento." />
 
                 <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <Link
                         v-for="event in events"
                         :key="event.id"
                         :href="route('events.dashboard', event.id)"
-                        class="event-card group block rounded-2xl border border-institutional-deep/8 bg-white p-5 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-institutional-interaction"
+                        class="group block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-institutional-500 focus-visible:ring-offset-2"
                     >
-                        <div class="flex items-start justify-between">
-                            <h3 class="font-semibold text-institutional-deep transition-colors group-hover:text-institutional-base">{{ event.name }}</h3>
-                            <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge[event.status]">
-                                {{ event.status_label }}
-                            </span>
-                        </div>
-                        <p class="mt-2 text-sm text-institutional-text/60">{{ formatDate(event.starts_at) }}</p>
-                        <p class="text-sm text-institutional-text/60">{{ event.location }}</p>
-                        <p class="mt-3 text-xs font-medium uppercase tracking-wide text-institutional-interaction">{{ event.role_label }}</p>
+                        <UiCard interactive class="h-full">
+                            <div class="flex items-start justify-between gap-2">
+                                <h3 class="font-semibold text-institutional-900 transition-colors group-hover:text-institutional-600">{{ event.name }}</h3>
+                                <UiBadge :variant="statusVariant[event.status]">{{ event.status_label }}</UiBadge>
+                            </div>
+                            <p class="mt-2 text-sm text-institutional-text/60">{{ formatDate(event.starts_at) }}</p>
+                            <p class="text-sm text-institutional-text/60">{{ event.location }}</p>
+                            <p class="mt-3 text-xs font-medium uppercase tracking-wide text-institutional-500">{{ event.role_label }}</p>
+                        </UiCard>
                     </Link>
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
-
-<style scoped>
-.event-card {
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-}
-.event-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 18px 36px -18px rgba(11, 42, 74, 0.35);
-    border-color: rgba(39, 108, 163, 0.35);
-}
-</style>

@@ -1,7 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import UiCard from '@/Components/ui/UiCard.vue';
+import UiButton from '@/Components/ui/UiButton.vue';
+import UiBadge from '@/Components/ui/UiBadge.vue';
 
 const props = defineProps({
     event: Object,
@@ -40,6 +43,11 @@ function confirmImport() {
 function onFile(e) {
     file.value = e.target.files[0] ?? null;
 }
+
+const tabClass = (active) =>
+    active
+        ? 'bg-institutional-600 text-white'
+        : 'bg-institutional-50 text-institutional-text/70 hover:bg-institutional-100';
 </script>
 
 <template>
@@ -48,75 +56,61 @@ function onFile(e) {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                <h2 class="text-xl font-semibold leading-tight text-institutional-900">
                     Importar convidados — {{ event.name }}
                 </h2>
-                <Link :href="route('guests.index', event.id)" class="text-sm text-sky-700 hover:underline">
-                    Voltar à lista
-                </Link>
+                <UiButton :href="route('guests.index', event.id)" variant="ghost" size="md">Voltar à lista</UiButton>
             </div>
         </template>
 
         <div class="py-6">
             <div class="mx-auto max-w-5xl space-y-6 px-4 sm:px-6 lg:px-8">
-                <div class="rounded-lg bg-white p-5 shadow">
+                <UiCard padding="p-6">
                     <div class="mb-4 flex gap-2">
-                        <button
-                            @click="mode = 'text'"
-                            :class="mode === 'text' ? 'bg-sky-700 text-white' : 'bg-gray-100 text-gray-700'"
-                            class="rounded px-4 py-2 text-sm font-medium"
-                        >Colar texto</button>
-                        <button
-                            @click="mode = 'file'"
-                            :class="mode === 'file' ? 'bg-sky-700 text-white' : 'bg-gray-100 text-gray-700'"
-                            class="rounded px-4 py-2 text-sm font-medium"
-                        >Enviar arquivo</button>
-                        <a :href="route('guests.import.template')" class="ml-auto self-center text-sm text-sky-700 hover:underline">
+                        <button @click="mode = 'text'" :class="tabClass(mode === 'text')" class="rounded-lg px-4 py-2 text-sm font-medium transition-colors">Colar texto</button>
+                        <button @click="mode = 'file'" :class="tabClass(mode === 'file')" class="rounded-lg px-4 py-2 text-sm font-medium transition-colors">Enviar arquivo</button>
+                        <a :href="route('guests.import.template')" class="ml-auto self-center text-sm font-medium text-institutional-600 hover:text-institutional-700 hover:underline">
                             Baixar modelo (.csv)
                         </a>
                     </div>
 
                     <div v-if="mode === 'text'">
-                        <label class="mb-1 block text-sm font-medium text-gray-700">
-                            Formato: <code>nome,tipo,relacao,confirmacao</code> — registros separados por <code>;</code> ou nova linha
+                        <label class="mb-1 block text-sm font-medium text-institutional-text/70">
+                            Formato: <code class="rounded bg-institutional-50 px-1 text-institutional-700">nome,tipo,relacao,confirmacao</code> — registros separados por <code class="rounded bg-institutional-50 px-1 text-institutional-700">;</code> ou nova linha
                         </label>
                         <textarea
                             v-model="text"
                             rows="6"
-                            class="w-full rounded-md border-gray-300 font-mono text-sm shadow-sm"
+                            class="w-full rounded-xl border-institutional-900/15 font-mono text-sm shadow-sm focus:border-institutional-500 focus:ring-institutional-500"
                             placeholder="Ana Silva,Autoridade,,0;Bruno Costa,Convidado geral,Ana Silva,1"
                         />
                     </div>
 
                     <div v-else>
-                        <label class="mb-1 block text-sm font-medium text-gray-700">
+                        <label class="mb-1 block text-sm font-medium text-institutional-text/70">
                             Arquivo (.xlsx, .csv, .txt, .md)
                         </label>
-                        <input type="file" accept=".xlsx,.xls,.csv,.txt,.md" @change="onFile" class="text-sm" />
+                        <input type="file" accept=".xlsx,.xls,.csv,.txt,.md" @change="onFile" class="text-sm text-institutional-text/70" />
                     </div>
 
-                    <button
-                        @click="submitPreview"
-                        :disabled="processing"
-                        class="mt-4 rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800 disabled:opacity-50"
-                    >
+                    <UiButton variant="primary" class="mt-4" :disabled="processing" @click="submitPreview">
                         {{ processing ? 'Processando...' : 'Pré-visualizar' }}
-                    </button>
-                </div>
+                    </UiButton>
+                </UiCard>
 
                 <!-- Pré-visualização -->
-                <div v-if="preview" class="rounded-lg bg-white p-5 shadow">
-                    <h3 class="mb-3 font-semibold text-gray-900">Pré-visualização</h3>
-                    <div class="mb-4 flex flex-wrap gap-4 text-sm">
-                        <span>Total: <strong>{{ preview.summary.total }}</strong></span>
-                        <span class="text-emerald-700">Válidos: <strong>{{ preview.summary.valid }}</strong></span>
-                        <span class="text-rose-700">Com erro: <strong>{{ preview.summary.invalid }}</strong></span>
-                        <span class="text-sky-700">Com vínculo: <strong>{{ preview.summary.with_relations }}</strong></span>
+                <UiCard v-if="preview" padding="p-6">
+                    <h3 class="mb-3 font-semibold text-institutional-900">Pré-visualização</h3>
+                    <div class="mb-4 flex flex-wrap items-center gap-3 text-sm">
+                        <span class="text-institutional-text/70">Total: <strong class="text-institutional-900">{{ preview.summary.total }}</strong></span>
+                        <UiBadge variant="success">Válidos: {{ preview.summary.valid }}</UiBadge>
+                        <UiBadge variant="danger">Com erro: {{ preview.summary.invalid }}</UiBadge>
+                        <UiBadge variant="info">Com vínculo: {{ preview.summary.with_relations }}</UiBadge>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50 text-left text-xs uppercase text-gray-500">
+                    <div class="overflow-x-auto rounded-xl border border-institutional-900/8">
+                        <table class="min-w-full divide-y divide-institutional-900/8 text-sm">
+                            <thead class="bg-institutional-50 text-left text-xs uppercase tracking-wide text-institutional-text/50">
                                 <tr>
                                     <th class="px-3 py-2">#</th>
                                     <th class="px-3 py-2">Nome</th>
@@ -126,10 +120,10 @@ function onFile(e) {
                                     <th class="px-3 py-2">Situação</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-institutional-900/6">
                                 <tr v-for="row in preview.rows" :key="row.line" :class="row.valid ? '' : 'bg-rose-50'">
-                                    <td class="px-3 py-2 text-gray-400">{{ row.line }}</td>
-                                    <td class="px-3 py-2">{{ row.name }}</td>
+                                    <td class="px-3 py-2 text-institutional-text/40">{{ row.line }}</td>
+                                    <td class="px-3 py-2 text-institutional-900">{{ row.name }}</td>
                                     <td class="px-3 py-2">{{ row.category }}</td>
                                     <td class="px-3 py-2">{{ row.relation || '—' }}</td>
                                     <td class="px-3 py-2">{{ row.rsvp === 'confirmado' ? 'Confirmado' : 'Pendente' }}</td>
@@ -140,22 +134,17 @@ function onFile(e) {
                                         <ul v-if="row.warnings.length" class="text-amber-700">
                                             <li v-for="(w, i) in row.warnings" :key="i">• {{ w }}</li>
                                         </ul>
-                                        <span v-if="row.valid && !row.warnings.length" class="text-emerald-700">OK</span>
+                                        <span v-if="row.valid && !row.warnings.length" class="font-medium text-emerald-700">OK</span>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
 
-                    <button
-                        v-if="preview.summary.valid > 0"
-                        @click="confirmImport"
-                        :disabled="processing"
-                        class="mt-4 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                    >
+                    <UiButton v-if="preview.summary.valid > 0" variant="success" class="mt-4" :disabled="processing" @click="confirmImport">
                         Confirmar importação de {{ preview.summary.valid }} registro(s)
-                    </button>
-                </div>
+                    </UiButton>
+                </UiCard>
             </div>
         </div>
     </AuthenticatedLayout>
