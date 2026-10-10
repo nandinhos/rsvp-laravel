@@ -130,3 +130,8 @@ body {
     }
     .reveal { opacity: 1; transform: none; }
 }
+
+/* ── Fallback sem JavaScript: conteúdo sempre visível ── */
+@media (scripting: none) {
+    .reveal { opacity: 1; transform: none; }
+}

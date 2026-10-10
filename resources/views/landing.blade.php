@@ -56,23 +56,23 @@
 <section id="top" class="hero-mesh hero-grain relative overflow-hidden">
     <div class="relative mx-auto max-w-7xl px-6 pb-24 pt-36 lg:px-8 lg:pt-44">
         <div class="mx-auto max-w-3xl text-center">
-            <div class="reveal mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-medium text-white/90 backdrop-blur">
+            <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-medium text-white/90 backdrop-blur">
                 <span class="live-dot inline-block h-2 w-2 rounded-full bg-emerald-400"></span>
                 Credenciamento em tempo real · multi-eventos
             </div>
 
-            <h1 class="reveal reveal-delay-1 text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 class="text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
                 Gestão de convidados que
                 <span class="text-gradient">não confunde pessoas, confirmações e presenças.</span>
             </h1>
 
-            <p class="reveal reveal-delay-2 mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75">
+            <p class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/75">
                 Plataforma premium para eventos corporativos e protocolares. Confirme RSVP,
                 trate acompanhantes e representantes como relações entre pessoas, credencie na
                 recepção e audite cada operação — com isolamento total por evento.
             </p>
 
-            <div class="reveal reveal-delay-3 mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a href="{{ route('login') }}"
                    class="cta-glow inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-[#0b2a4a] shadow-xl">
                     Acessar a plataforma
@@ -85,7 +85,7 @@
         </div>
 
         {{-- Mock do painel — prova visual --}}
-        <div class="reveal reveal-delay-3 mx-auto mt-16 max-w-5xl">
+        <div class="mx-auto mt-16 max-w-5xl">
             <div class="rounded-2xl border border-white/10 bg-white/[0.06] p-2 shadow-2xl backdrop-blur">
                 <div class="grid grid-cols-2 gap-3 rounded-xl bg-[#0b2a4a]/60 p-4 sm:grid-cols-3 lg:grid-cols-5">
                     @foreach ([
