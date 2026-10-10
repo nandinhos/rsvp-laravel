@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -39,13 +40,21 @@ class AuthenticatedSessionController extends Controller
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request): SymfonyResponse
     {
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
+
+        // Logout muda o contexto de autenticação: forçamos uma navegação de
+        // página inteira (hard visit) para a tela de login. Isso evita que o
+        // Inertia renderize a resposta como um overlay sobre o painel e garante
+        // um novo CSRF token válido no carregamento do formulário de login.
+        if ($request->header('X-Inertia')) {
+            return Inertia::location(route('login'));
+        }
 
         return redirect()->route('login');
     }

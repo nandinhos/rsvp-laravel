@@ -39,3 +39,16 @@ test('users can logout', function () {
     $this->assertGuest();
     $response->assertRedirect(route('login'));
 });
+
+test('inertia logout forces full-page redirect to login', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true'])
+        ->post('/logout');
+
+    $this->assertGuest();
+    // Inertia::location responde 409 com o destino em X-Inertia-Location.
+    $response->assertStatus(409);
+    $response->assertHeader('X-Inertia-Location', route('login'));
+});
