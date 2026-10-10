@@ -91,34 +91,45 @@ function rate(value) {
                     <div
                         v-for="card in cards"
                         :key="card.label"
-                        class="rounded-lg bg-white p-5 shadow"
+                        class="stat-card group relative overflow-hidden rounded-2xl border border-institutional-deep/8 bg-white p-5 shadow-sm"
                     >
-                        <p class="text-sm font-medium text-gray-500">{{ card.label }}</p>
-                        <p class="mt-1 text-3xl font-semibold text-gray-900">{{ card.value }}</p>
-                        <p class="mt-1 text-xs text-gray-400">{{ card.hint }}</p>
+                        <span class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-institutional-base to-institutional-interaction opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
+                        <p class="text-xs font-medium uppercase tracking-wide text-institutional-text/50">{{ card.label }}</p>
+                        <p class="mt-1.5 text-3xl font-bold text-institutional-deep">{{ card.value }}</p>
+                        <p class="mt-1 text-xs text-institutional-text/40">{{ card.hint }}</p>
                     </div>
                 </div>
 
                 <!-- Participação prevista e taxas -->
                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                    <div class="rounded-lg bg-white p-5 shadow">
-                        <p class="text-sm font-medium text-gray-500">Participação prevista</p>
-                        <p class="mt-1 text-3xl font-semibold text-gray-900">
+                    <div class="rounded-2xl border border-institutional-deep/8 bg-gradient-to-br from-institutional-deep to-institutional-base p-6 shadow-lg shadow-institutional-deep/20">
+                        <p class="text-xs font-medium uppercase tracking-wide text-white/60">Participação prevista</p>
+                        <p class="mt-1.5 text-3xl font-bold text-white">
                             {{ metrics.expected_participants }}
-                            <span class="text-lg font-normal text-gray-400"> / {{ metrics.estimated_audience }}</span>
+                            <span class="text-lg font-normal text-white/50"> / {{ metrics.estimated_audience }}</span>
                         </p>
-                        <p class="mt-1 text-xs text-gray-400">Público estimado: {{ metrics.estimated_audience }}</p>
+                        <p class="mt-1 text-xs text-white/50">Público estimado: {{ metrics.estimated_audience }}</p>
                     </div>
-                    <div class="rounded-lg bg-white p-5 shadow">
-                        <p class="text-sm font-medium text-gray-500">Taxa de confirmação</p>
-                        <p class="mt-1 text-3xl font-semibold text-gray-900">{{ rate(metrics.confirmation_rate) }}</p>
+                    <div class="stat-card rounded-2xl border border-institutional-deep/8 bg-white p-6 shadow-sm">
+                        <p class="text-xs font-medium uppercase tracking-wide text-institutional-text/50">Taxa de confirmação</p>
+                        <p class="mt-1.5 text-3xl font-bold text-institutional-base">{{ rate(metrics.confirmation_rate) }}</p>
                     </div>
-                    <div class="rounded-lg bg-white p-5 shadow">
-                        <p class="text-sm font-medium text-gray-500">Taxa de comparecimento</p>
-                        <p class="mt-1 text-3xl font-semibold text-gray-900">{{ rate(metrics.attendance_rate) }}</p>
+                    <div class="stat-card rounded-2xl border border-institutional-deep/8 bg-white p-6 shadow-sm">
+                        <p class="text-xs font-medium uppercase tracking-wide text-institutional-text/50">Taxa de comparecimento</p>
+                        <p class="mt-1.5 text-3xl font-bold text-institutional-interaction">{{ rate(metrics.attendance_rate) }}</p>
                     </div>
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+.stat-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px -16px rgba(11, 42, 74, 0.3);
+}
+</style>

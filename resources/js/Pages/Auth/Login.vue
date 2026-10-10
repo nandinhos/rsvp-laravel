@@ -46,7 +46,12 @@ function useCredentials(email) {
     <GuestLayout>
         <Head title="Entrar" />
 
-        <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold tracking-tight text-institutional-deep">Bem-vindo de volta</h2>
+            <p class="mt-1 text-sm text-institutional-text/60">Acesse o painel de gestão de convidados.</p>
+        </div>
+
+        <div v-if="status" class="mb-4 rounded-lg bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
             {{ status }}
         </div>
 
@@ -93,13 +98,14 @@ function useCredentials(email) {
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+                    class="text-sm font-medium text-institutional-interaction hover:text-institutional-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-institutional-interaction focus-visible:ring-offset-2"
                 >
                     Esqueceu a senha?
                 </Link>
+            </div>
 
+            <div class="mt-6">
                 <PrimaryButton
-                    class="ms-4"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
@@ -109,9 +115,9 @@ function useCredentials(email) {
         </form>
 
         <!-- Usuários de teste por perfil (ambiente de demonstração) -->
-        <div class="mt-6 rounded-lg border border-sky-100 bg-sky-50 p-4">
-            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-sky-800">
-                Usuários de teste · senha: <code class="font-mono">password</code>
+        <div class="mt-6 rounded-xl border border-institutional-interaction/15 bg-institutional-neutral p-4">
+            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-institutional-base">
+                Usuários de teste · senha: <code class="rounded bg-white px-1 py-0.5 font-mono text-institutional-deep">password</code>
             </p>
             <ul class="space-y-1">
                 <li
@@ -119,13 +125,13 @@ function useCredentials(email) {
                     :key="u.email"
                     class="flex items-center justify-between text-sm"
                 >
-                    <span class="text-gray-700">
-                        <strong>{{ u.role }}</strong> — <span class="font-mono text-gray-600">{{ u.email }}</span>
+                    <span class="text-institutional-text/80">
+                        <strong>{{ u.role }}</strong> — <span class="font-mono text-institutional-text/60">{{ u.email }}</span>
                     </span>
                     <button
                         type="button"
                         @click="useCredentials(u.email)"
-                        class="rounded border border-sky-300 px-2 py-0.5 text-xs font-medium text-sky-700 hover:bg-sky-100"
+                        class="rounded-lg border border-institutional-interaction/40 px-2.5 py-1 text-xs font-medium text-institutional-base transition-colors hover:bg-institutional-base hover:text-white"
                     >
                         Usar
                     </button>

@@ -43,20 +43,31 @@ function formatDate(iso) {
                         v-for="event in events"
                         :key="event.id"
                         :href="route('events.dashboard', event.id)"
-                        class="block rounded-lg bg-white p-5 shadow transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        class="event-card group block rounded-2xl border border-institutional-deep/8 bg-white p-5 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-institutional-interaction"
                     >
                         <div class="flex items-start justify-between">
-                            <h3 class="font-semibold text-gray-900">{{ event.name }}</h3>
+                            <h3 class="font-semibold text-institutional-deep transition-colors group-hover:text-institutional-base">{{ event.name }}</h3>
                             <span class="rounded-full px-2 py-0.5 text-xs font-medium" :class="statusBadge[event.status]">
                                 {{ event.status_label }}
                             </span>
                         </div>
-                        <p class="mt-2 text-sm text-gray-500">{{ formatDate(event.starts_at) }}</p>
-                        <p class="text-sm text-gray-500">{{ event.location }}</p>
-                        <p class="mt-3 text-xs font-medium uppercase tracking-wide text-sky-700">{{ event.role_label }}</p>
+                        <p class="mt-2 text-sm text-institutional-text/60">{{ formatDate(event.starts_at) }}</p>
+                        <p class="text-sm text-institutional-text/60">{{ event.location }}</p>
+                        <p class="mt-3 text-xs font-medium uppercase tracking-wide text-institutional-interaction">{{ event.role_label }}</p>
                     </Link>
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+.event-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.event-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 36px -18px rgba(11, 42, 74, 0.35);
+    border-color: rgba(39, 108, 163, 0.35);
+}
+</style>
