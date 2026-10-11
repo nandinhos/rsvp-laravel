@@ -1,6 +1,8 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PageHero from '@/Components/ui/PageHero.vue';
+import PageContainer from '@/Components/ui/PageContainer.vue';
 import UiButton from '@/Components/ui/UiButton.vue';
 import UiCard from '@/Components/ui/UiCard.vue';
 import UiBadge from '@/Components/ui/UiBadge.vue';
@@ -24,22 +26,13 @@ function resolve(relationshipId, keep) {
     <Head :title="`Conflitos · ${event.name}`" />
 
     <AuthenticatedLayout>
-        <!-- Hero institucional (estilo landing) -->
-        <section class="bg-gradient-to-br from-institutional-900 to-institutional-700">
-            <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Resolução de representação · CA-06</p>
-                <h1 class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    Conflitos de representação
-                </h1>
-                <p class="mt-2 max-w-2xl text-sm text-white/70">
-                    {{ event.name }} — quando titular e representante confirmam ao mesmo tempo, a decisão é
-                    explícita e auditada. Nada é alterado silenciosamente.
-                </p>
-            </div>
-        </section>
+        <PageHero
+            title="Conflitos de representação"
+            :subtitle="`${event.name} — quando titular e representante confirmam ao mesmo tempo, a decisão é explícita e auditada. Nada é alterado silenciosamente.`"
+        />
 
-        <div class="py-6">
-            <div class="mx-auto max-w-5xl space-y-5 px-4 sm:px-6 lg:px-8">
+        <PageContainer>
+            <div class="space-y-5">
                 <EmptyState v-if="conflicts.length === 0" title="Nenhum conflito pendente" message="Todos os vínculos estão consistentes." />
 
                 <UiCard v-for="c in conflicts" :key="c.id" padding="p-0">
@@ -103,6 +96,6 @@ function resolve(relationshipId, keep) {
                     </p>
                 </UiCard>
             </div>
-        </div>
+        </PageContainer>
     </AuthenticatedLayout>
 </template>

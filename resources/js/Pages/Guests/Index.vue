@@ -7,6 +7,8 @@ import UiBadge from '@/Components/ui/UiBadge.vue';
 import UiCard from '@/Components/ui/UiCard.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import AlertBanner from '@/Components/ui/AlertBanner.vue';
+import PageHero from '@/Components/ui/PageHero.vue';
+import PageContainer from '@/Components/ui/PageContainer.vue';
 import { useToast } from '@/composables/useToast';
 
 const props = defineProps({
@@ -152,23 +154,18 @@ const inputClass =
                 <strong>Atenção:</strong> este evento foi <strong>ENCERRADO</strong>. Inclusões, confirmações e credenciamentos estão bloqueados (CA-14).
             </AlertBanner>
         </template>
-        <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <h2 class="text-xl font-semibold leading-tight text-institutional-900">
-                    {{ event.name }} — Convidados
-                </h2>
-                <div class="flex flex-wrap gap-2">
-                    <UiButton v-if="can.operate" :href="route('guests.check-in-station', event.id)" variant="primary">Credenciamento</UiButton>
-                    <UiButton v-if="can.export" external :href="exportUrl('guests.export.excel')" variant="secondary" size="md">Excel</UiButton>
-                    <UiButton v-if="can.export" external :href="exportUrl('guests.export.pdf')" variant="secondary" size="md">PDF</UiButton>
-                    <UiButton v-if="can.manageGuests" :href="route('guests.import.create', event.id)" variant="primary">Importar</UiButton>
-                    <UiButton v-if="can.manageGuests" variant="success" @click="showCreate = !showCreate">Novo convidado</UiButton>
-                </div>
-            </div>
-        </template>
 
-        <div class="py-6">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <PageHero :title="`${event.name} — Convidados`">
+            <template #actions>
+                <UiButton v-if="can.operate" :href="route('guests.check-in-station', event.id)" variant="primary">Credenciamento</UiButton>
+                <UiButton v-if="can.export" external :href="exportUrl('guests.export.excel')" variant="secondary" size="md">Excel</UiButton>
+                <UiButton v-if="can.export" external :href="exportUrl('guests.export.pdf')" variant="secondary" size="md">PDF</UiButton>
+                <UiButton v-if="can.manageGuests" :href="route('guests.import.create', event.id)" variant="primary">Importar</UiButton>
+                <UiButton v-if="can.manageGuests" variant="success" @click="showCreate = !showCreate">Novo convidado</UiButton>
+            </template>
+        </PageHero>
+
+        <PageContainer>
                 <!-- Formulário de cadastro manual (PRD §6-C) -->
                 <UiCard v-if="showCreate && can.manageGuests" padding="p-6" class="mb-4">
                     <h3 class="mb-4 font-semibold text-institutional-900">Novo convidado</h3>
@@ -296,7 +293,6 @@ const inputClass =
                         v-html="link.label"
                     />
                 </div>
-            </div>
-        </div>
+        </PageContainer>
     </AuthenticatedLayout>
 </template>

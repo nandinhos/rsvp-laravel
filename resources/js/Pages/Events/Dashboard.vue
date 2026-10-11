@@ -6,6 +6,7 @@ import StatCard from '@/Components/ui/StatCard.vue';
 import UiButton from '@/Components/ui/UiButton.vue';
 import UiCard from '@/Components/ui/UiCard.vue';
 import AlertBanner from '@/Components/ui/AlertBanner.vue';
+import PageContainer from '@/Components/ui/PageContainer.vue';
 
 const props = defineProps({
     event: Object,
@@ -79,33 +80,8 @@ const attendancePct = computed(() => Math.min(100, props.metrics.attendance_rate
             </AlertBanner>
         </template>
 
-        <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <h2 class="text-xl font-semibold leading-tight text-institutional-900">Painel &amp; Métricas</h2>
-                <div class="flex flex-wrap gap-2">
-                    <UiButton v-if="can.administer" :href="route('events.audit', event.id)" variant="neutral">Auditoria</UiButton>
-                    <UiButton
-                        v-if="can.administer && event.status !== 'encerrado'"
-                        variant="secondary"
-                        class="!border-rose-300 !text-rose-700 hover:!bg-rose-50"
-                        @click="action('events.close')"
-                    >
-                        Encerrar
-                    </UiButton>
-                    <UiButton
-                        v-if="can.administer && event.status === 'encerrado'"
-                        variant="secondary"
-                        class="!border-emerald-300 !text-emerald-700 hover:!bg-emerald-50"
-                        @click="action('events.reopen')"
-                    >
-                        Reabrir
-                    </UiButton>
-                </div>
-            </div>
-        </template>
-
-        <div class="py-6">
-            <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+        <PageContainer>
+            <div class="space-y-6">
                 <!-- Banner do evento -->
                 <UiCard padding="p-6">
                     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -131,6 +107,23 @@ const attendancePct = computed(() => Math.min(100, props.metrics.attendance_rate
                         <div class="flex flex-wrap gap-2">
                             <UiButton v-if="can.operate" :href="route('guests.check-in-station', event.id)" variant="primary">Estação Portaria</UiButton>
                             <UiButton :href="route('guests.index', event.id)" variant="secondary">Lista de convidados</UiButton>
+                            <UiButton v-if="can.administer" :href="route('events.audit', event.id)" variant="neutral">Auditoria</UiButton>
+                            <UiButton
+                                v-if="can.administer && event.status !== 'encerrado'"
+                                variant="secondary"
+                                class="!border-rose-300 !text-rose-700 hover:!bg-rose-50"
+                                @click="action('events.close')"
+                            >
+                                Encerrar
+                            </UiButton>
+                            <UiButton
+                                v-if="can.administer && event.status === 'encerrado'"
+                                variant="secondary"
+                                class="!border-emerald-300 !text-emerald-700 hover:!bg-emerald-50"
+                                @click="action('events.reopen')"
+                            >
+                                Reabrir
+                            </UiButton>
                         </div>
                     </div>
                 </UiCard>
@@ -259,6 +252,6 @@ const attendancePct = computed(() => Math.min(100, props.metrics.attendance_rate
                     </UiCard>
                 </div>
             </div>
-        </div>
+        </PageContainer>
     </AuthenticatedLayout>
 </template>

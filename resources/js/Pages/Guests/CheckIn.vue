@@ -7,6 +7,8 @@ import UiBadge from '@/Components/ui/UiBadge.vue';
 import StatCard from '@/Components/ui/StatCard.vue';
 import AlertBanner from '@/Components/ui/AlertBanner.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
+import PageHero from '@/Components/ui/PageHero.vue';
+import PageContainer from '@/Components/ui/PageContainer.vue';
 import { useToast } from '@/composables/useToast';
 
 const props = defineProps({
@@ -94,17 +96,14 @@ function undoLastCheckIn() {
             </AlertBanner>
         </template>
 
-        <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <h2 class="text-xl font-semibold leading-tight text-institutional-900">
-                    {{ event.name }} — Credenciamento (Portaria)
-                </h2>
-                <UiButton :href="route('guests.index', event.id)" variant="neutral" size="md">Lista completa</UiButton>
-            </div>
-        </template>
+        <PageHero :title="`${event.name} — Credenciamento`" subtitle="Estação de portaria — valide a presença dos convidados confirmados.">
+            <template #actions>
+                <UiButton :href="route('guests.index', event.id)" variant="secondary" size="md">Lista completa</UiButton>
+            </template>
+        </PageHero>
 
-        <div class="py-6">
-            <div class="mx-auto max-w-5xl space-y-5 px-4 sm:px-6 lg:px-8">
+        <PageContainer>
+            <div class="space-y-5">
                 <!-- Contadores ao vivo -->
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <StatCard label="Presentes" :value="counters.present" accent="base" />
@@ -231,6 +230,6 @@ function undoLastCheckIn() {
                     </ul>
                 </section>
             </div>
-        </div>
+        </PageContainer>
     </AuthenticatedLayout>
 </template>
