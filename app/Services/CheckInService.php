@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Enums\AttendanceStatus;
+use App\Enums\RsvpStatus;
+use App\Exceptions\GuestDomainException;
 use App\Models\Guest;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -12,12 +14,17 @@ use Illuminate\Support\Facades\DB;
  *
  * Idempotente: check-ins repetidos NÃO produzem presenças duplicadas nem
  * sobrescrevem o horário/responsável do primeiro credenciamento.
+ *
+ * Regra de aptidão: somente convidados com RSVP confirmado podem ser
+ * credenciados — impede o estado inconsistente "pendente + presente".
  */
 class CheckInService
 {
     /**
      * Credencia o convidado. Se já estiver presente, não altera nada (CA-09).
      * Seguro sob concorrência via lock pessimista na linha (CA-13).
+     *
+     * @throws GuestDomainException se o convidado não estiver confirmado.
      */
     public function checkIn(Guest $guest, User $operator): Guest
     {
@@ -27,6 +34,12 @@ class CheckInService
 
             if ($locked->attendance_status === AttendanceStatus::Presente) {
                 return $locked; // já credenciado: idempotente
+            }
+
+            if ($locked->rsvp_status !== RsvpStatus::Confirmado) {
+                throw new GuestDomainException(
+                    'Apenas convidados confirmados podem ser credenciados. Confirme o RSVP primeiro.'
+                );
             }
 
             $locked->forceFill([

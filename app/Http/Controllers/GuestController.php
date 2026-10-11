@@ -73,9 +73,13 @@ class GuestController extends Controller
 
     /**
      * Estação de credenciamento (portaria): busca unificada, contadores ao
-     * vivo e credenciamento rápido (CA-09, CA-12). A ordenação é estável pela
-     * numeração do evento — credenciar NÃO reordena a lista, preservando a
-     * posição visual do convidado para a operação na portaria.
+     * vivo e credenciamento rápido (CA-09, CA-12). Ordenação estável pela
+     * numeração do evento — credenciar NÃO reordena a lista.
+     *
+     * A lista é dividida por aptidão ao credenciamento:
+     *  - "eligible": convidados confirmados (podem ser credenciados);
+     *  - "pending":  convidados com RSVP pendente (precisam confirmar antes).
+     * Quem recusou (não participará) não aparece na estação.
      */
     public function checkInStation(Request $request, Event $event): Response
     {
@@ -83,20 +87,27 @@ class GuestController extends Controller
 
         $search = (string) $request->query('search', '');
 
-        $guests = $this->listQuery->build($event, ['search' => $search])
-            ->limit(100)
-            ->get()
-            ->map(fn (Guest $g) => [
-                'id' => $g->id,
-                'number' => $g->number,
-                'full_name' => $g->full_name,
-                'category' => $g->category?->name,
-                'rsvp_status' => $g->rsvp_status->value,
-                'rsvp_label' => $g->rsvp_status->label(),
-                'role_label' => $g->participation_role->label(),
-                'attendance_status' => $g->attendance_status->value,
-                'attendance_label' => $g->attendance_status->label(),
-            ]);
+        $toArray = fn (Guest $g) => [
+            'id' => $g->id,
+            'number' => $g->number,
+            'full_name' => $g->full_name,
+            'category' => $g->category?->name,
+            'rsvp_status' => $g->rsvp_status->value,
+            'rsvp_label' => $g->rsvp_status->label(),
+            'role_label' => $g->participation_role->label(),
+            'attendance_status' => $g->attendance_status->value,
+            'attendance_label' => $g->attendance_status->label(),
+        ];
+
+        $rows = $this->listQuery->build($event, ['search' => $search])->limit(200)->get();
+
+        $eligible = $rows
+            ->filter(fn (Guest $g) => $g->rsvp_status === RsvpStatus::Confirmado)
+            ->map($toArray)->values();
+
+        $pending = $rows
+            ->filter(fn (Guest $g) => $g->rsvp_status === RsvpStatus::Pendente)
+            ->map($toArray)->values();
 
         $all = $event->guests()->get(['rsvp_status', 'attendance_status']);
 
@@ -106,13 +117,15 @@ class GuestController extends Controller
                 'name' => $event->name,
                 'status' => $event->status->value,
             ],
-            'guests' => $guests,
+            'eligible' => $eligible,
+            'pending' => $pending,
             'search' => $search,
             'counters' => [
                 'present' => $all->where('attendance_status', AttendanceStatus::Presente->value)->count(),
                 'confirmed' => $all->where('rsvp_status', RsvpStatus::Confirmado->value)->count(),
                 'awaiting' => $all->where('attendance_status', AttendanceStatus::Aguardando->value)
                     ->where('rsvp_status', RsvpStatus::Confirmado->value)->count(),
+                'pending' => $all->where('rsvp_status', RsvpStatus::Pendente->value)->count(),
                 'total' => $all->count(),
             ],
             'can' => [
@@ -210,7 +223,11 @@ class GuestController extends Controller
         $this->guardOwnership($event, $guest);
         $this->guardOpen($event);
 
-        $this->checkIn->checkIn($guest, $request->user());
+        try {
+            $this->checkIn->checkIn($guest, $request->user());
+        } catch (GuestDomainException $e) {
+            return back()->withErrors(['check_in' => $e->getMessage()]);
+        }
 
         $this->audit->log('guest.checked_in', $request->user(), $event, $guest);
 

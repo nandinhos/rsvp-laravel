@@ -94,7 +94,7 @@ it('check-in é idempotente e preserva o primeiro credenciamento (CA-09)', funct
     $event = Event::factory()->create();
     $op1 = member($event, EventRole::Operador);
     $op2 = member($event, EventRole::Operador);
-    $guest = Guest::factory()->inEvent($event)->create();
+    $guest = Guest::factory()->inEvent($event)->confirmed()->create();
 
     $service = app(CheckInService::class);
 
@@ -202,7 +202,7 @@ it('rejeita cadastro com categoria de outro evento (CA-02)', function () {
 it('operador desfaz o credenciamento (revert-check-in)', function () {
     $event = Event::factory()->create();
     $operador = member($event, EventRole::Operador);
-    $guest = Guest::factory()->inEvent($event)->create();
+    $guest = Guest::factory()->inEvent($event)->confirmed()->create();
 
     app(CheckInService::class)->checkIn($guest, $operador);
     expect($guest->fresh()->attendance_status)->toBe(AttendanceStatus::Presente);
@@ -278,27 +278,28 @@ it('nega estação de credenciamento a quem não pertence ao evento (CA-01)', fu
         ->assertForbidden();
 });
 
-it('renderiza a estação de credenciamento com contadores ao vivo', function () {
+it('renderiza a estação com aptos, pendentes e contadores ao vivo', function () {
     $event = Event::factory()->create();
     $operador = member($event, EventRole::Operador);
 
-    Guest::factory()->inEvent($event)->create([
-        'full_name' => 'Ana', 'rsvp_status' => RsvpStatus::Confirmado,
-    ]);
-    $presente = Guest::factory()->inEvent($event)->create([
-        'full_name' => 'Bruno', 'rsvp_status' => RsvpStatus::Confirmado,
-    ]);
+    Guest::factory()->inEvent($event)->confirmed()->create(['full_name' => 'Ana']);
+    $presente = Guest::factory()->inEvent($event)->confirmed()->create(['full_name' => 'Bruno']);
     app(CheckInService::class)->checkIn($presente, $operador);
+    // Um pendente: deve ir para a seção de pendentes, não de aptos.
+    Guest::factory()->inEvent($event)->create(['full_name' => 'Carla', 'rsvp_status' => RsvpStatus::Pendente]);
 
     $this->actingAs($operador)
         ->get(route('guests.check-in-station', $event->id))
         ->assertInertia(fn ($page) => $page
             ->component('Guests/CheckIn')
-            ->where('counters.total', 2)
+            ->where('counters.total', 3)
             ->where('counters.present', 1)
             ->where('counters.awaiting', 1)
             ->where('counters.confirmed', 2)
-            ->has('guests', 2)
+            ->where('counters.pending', 1)
+            ->has('eligible', 2)
+            ->has('pending', 1)
+            ->where('pending.0.full_name', 'Carla')
         );
 });
 
@@ -306,18 +307,46 @@ it('a estação mantém ordem estável por número (credenciar não reordena)', 
     $event = Event::factory()->create();
     $operador = member($event, EventRole::Operador);
 
-    // #1 é credenciado (presente); #2 permanece aguardando.
-    $primeiro = Guest::factory()->inEvent($event)->create(['full_name' => 'Primeiro numero']);
+    // Ambos confirmados; #1 é credenciado (presente), #2 segue aguardando.
+    $primeiro = Guest::factory()->inEvent($event)->confirmed()->create(['full_name' => 'Primeiro numero']);
     app(CheckInService::class)->checkIn($primeiro, $operador);
-    Guest::factory()->inEvent($event)->create(['full_name' => 'Segundo numero']);
+    Guest::factory()->inEvent($event)->confirmed()->create(['full_name' => 'Segundo numero']);
 
-    // A ordem deve seguir a numeração do evento, não o estado de presença:
-    // o presente #1 continua antes do que aguarda #2.
+    // A ordem segue a numeração, não o estado de presença:
+    // o presente #1 continua antes do que aguarda #2 na lista de aptos.
     $this->actingAs($operador)
         ->get(route('guests.check-in-station', $event->id))
         ->assertInertia(fn ($page) => $page
-            ->where('guests.0.number', $primeiro->number)
-            ->where('guests.0.attendance_status', 'presente')
-            ->where('guests.1.attendance_status', 'aguardando')
+            ->where('eligible.0.number', $primeiro->number)
+            ->where('eligible.0.attendance_status', 'presente')
+            ->where('eligible.1.attendance_status', 'aguardando')
         );
+});
+
+/**
+ * Regra de aptidão (validação com correção): só confirmados credenciam.
+ */
+it('bloqueia check-in de convidado não confirmado e não gera estado inconsistente', function () {
+    $event = Event::factory()->create();
+    $operador = member($event, EventRole::Operador);
+    $pendente = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::Pendente]);
+
+    $this->actingAs($operador)
+        ->post(route('guests.check-in', [$event->id, $pendente->id]))
+        ->assertRedirect()
+        ->assertSessionHasErrors('check_in');
+
+    $pendente->refresh();
+    // Permanece aguardando: nunca "pendente + presente".
+    expect($pendente->attendance_status)->toBe(AttendanceStatus::Aguardando);
+    expect($pendente->checked_in_at)->toBeNull();
+});
+
+it('serviço de check-in rejeita convidado não confirmado', function () {
+    $event = Event::factory()->create();
+    $operador = member($event, EventRole::Operador);
+    $pendente = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::Pendente]);
+
+    expect(fn () => app(CheckInService::class)->checkIn($pendente, $operador))
+        ->toThrow(App\Exceptions\GuestDomainException::class);
 });
