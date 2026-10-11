@@ -4,6 +4,7 @@ import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import StatCard from '@/Components/ui/StatCard.vue';
 import UiButton from '@/Components/ui/UiButton.vue';
+import UiCard from '@/Components/ui/UiCard.vue';
 import AlertBanner from '@/Components/ui/AlertBanner.vue';
 
 const props = defineProps({
@@ -16,17 +17,45 @@ function action(name) {
     router.post(route(name, props.event.id), {}, { preserveScroll: true });
 }
 
+const statusLabel = computed(() => {
+    if (props.event.status === 'ativo') return 'Em Andamento (Ativo)';
+    if (props.event.status === 'encerrado') return 'Encerrado';
+    return 'Rascunho';
+});
+
+const statusColor = computed(() => ({
+    ativo: 'text-emerald-700',
+    encerrado: 'text-institutional-text/50',
+    rascunho: 'text-amber-700',
+}[props.event.status] ?? 'text-institutional-text/60'));
+
+const formattedDate = computed(() => {
+    if (!props.event.starts_at) return null;
+    try {
+        return new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit', month: 'long', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+        }).format(new Date(props.event.starts_at)).replace(',', ' às');
+    } catch {
+        return null;
+    }
+});
+
 const cards = computed(() => [
-    { label: 'Confirmados', value: props.metrics.confirmed_hosts, hint: 'Titulares', accent: 'ink' },
-    { label: 'Acompanhantes', value: props.metrics.confirmed_companions, hint: 'Vinculados', accent: 'base' },
-    { label: 'Representantes', value: props.metrics.confirmed_representatives, hint: 'Substituições', accent: 'interaction' },
-    { label: 'Não confirmados', value: props.metrics.not_confirmed, hint: 'Pendentes ou recusados', accent: 'ink' },
-    { label: 'Presenças', value: props.metrics.present, hint: 'Credenciados', accent: 'base' },
+    { label: 'Confirmados', value: props.metrics.confirmed_hosts, hint: 'Titulares diretos', accent: 'ink', dot: 'emerald' },
+    { label: 'Acompanhantes', value: props.metrics.confirmed_companions, hint: 'Vínculos ativos', accent: 'base', dot: 'sky' },
+    { label: 'Representantes', value: props.metrics.confirmed_representatives, hint: 'Substituições', accent: 'interaction', dot: 'violet' },
+    { label: 'Não confirmados', value: props.metrics.not_confirmed, hint: 'Pendentes/Recusas', accent: 'ink', dot: 'amber' },
+    { label: 'Presenças', value: props.metrics.present, hint: 'Portaria / Check-in', accent: 'base', dot: 'emerald', highlight: true },
+    { label: 'Público estimado', value: props.metrics.estimated_audience, hint: 'Configurações', accent: 'ink', dot: 'slate' },
 ]);
 
 function rate(value) {
     return value === null ? 'Indisponível' : `${value}%`;
 }
+
+const confirmationPct = computed(() => Math.min(100, props.metrics.confirmation_rate ?? 0));
+const attendancePct = computed(() => Math.min(100, props.metrics.attendance_rate ?? 0));
 </script>
 
 <template>
@@ -38,23 +67,12 @@ function rate(value) {
                 <strong>Atenção:</strong> este evento foi <strong>ENCERRADO</strong>. Inclusões, confirmações e credenciamentos estão bloqueados (CA-14).
             </AlertBanner>
         </template>
+
         <template #header>
             <div class="flex flex-wrap items-center justify-between gap-2">
-                <h2 class="text-xl font-semibold leading-tight text-institutional-900">
-                    {{ event.name }}
-                </h2>
+                <h2 class="text-xl font-semibold leading-tight text-institutional-900">Painel &amp; Métricas</h2>
                 <div class="flex flex-wrap gap-2">
-                    <UiButton
-                        v-if="metrics.has_pending_conflicts && can.operate"
-                        :href="route('conflicts.index', event.id)"
-                        variant="primary"
-                        class="!bg-amber-500 hover:!bg-amber-600"
-                    >
-                        Resolver conflitos
-                    </UiButton>
-                    <UiButton v-if="can.administer" :href="route('events.audit', event.id)" variant="neutral">
-                        Auditoria
-                    </UiButton>
+                    <UiButton v-if="can.administer" :href="route('events.audit', event.id)" variant="neutral">Auditoria</UiButton>
                     <UiButton
                         v-if="can.administer && event.status !== 'encerrado'"
                         variant="secondary"
@@ -71,15 +89,41 @@ function rate(value) {
                     >
                         Reabrir
                     </UiButton>
-                    <UiButton :href="route('guests.index', event.id)" variant="primary">
-                        Ver convidados
-                    </UiButton>
                 </div>
             </div>
         </template>
 
         <div class="py-6">
             <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+                <!-- Banner do evento -->
+                <UiCard padding="p-6">
+                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p class="flex items-center gap-2 text-xs font-medium text-institutional-600">
+                                <span>Evento</span>
+                                <span class="text-institutional-text/30">·</span>
+                                <span class="font-semibold" :class="statusColor">{{ statusLabel }}</span>
+                            </p>
+                            <h1 class="mt-1 text-2xl font-bold tracking-tight text-institutional-900">{{ event.name }}</h1>
+                            <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-institutional-text/60">
+                                <span v-if="formattedDate" class="flex items-center gap-1.5">
+                                    <svg class="h-4 w-4 text-institutional-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /></svg>
+                                    {{ formattedDate }}
+                                </span>
+                                <span v-if="event.location" class="hidden text-institutional-text/20 sm:inline">|</span>
+                                <span v-if="event.location" class="flex items-center gap-1.5">
+                                    <svg class="h-4 w-4 text-institutional-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                                    {{ event.location }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <UiButton v-if="can.operate" :href="route('guests.check-in-station', event.id)" variant="primary">Estação Portaria</UiButton>
+                            <UiButton :href="route('guests.index', event.id)" variant="secondary">Lista de convidados</UiButton>
+                        </div>
+                    </div>
+                </UiCard>
+
                 <!-- Aviso de conflitos pendentes (CA-06) -->
                 <AlertBanner
                     v-if="metrics.has_pending_conflicts"
@@ -89,44 +133,97 @@ function rate(value) {
                     Titular e representante confirmados simultaneamente. Os quantitativos definitivos
                     dependem da resolução explícita desta pendência.
                     <template #action v-if="can.operate">
-                        <UiButton
-                            :href="route('conflicts.index', event.id)"
-                            variant="primary"
-                            size="sm"
-                            class="!bg-amber-600 hover:!bg-amber-700"
-                        >
-                            Resolver agora
+                        <UiButton :href="route('conflicts.index', event.id)" variant="primary" size="sm" class="!bg-amber-600 hover:!bg-amber-700">
+                            Resolver conflito agora
                         </UiButton>
                     </template>
                 </AlertBanner>
 
-                <!-- Indicadores principais -->
-                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                    <StatCard
-                        v-for="card in cards"
-                        :key="card.label"
-                        :label="card.label"
-                        :value="card.value"
-                        :hint="card.hint"
-                        :accent="card.accent"
-                    />
+                <!-- Indicadores -->
+                <div>
+                    <div class="mb-3 flex items-end justify-between">
+                        <h3 class="text-sm font-semibold uppercase tracking-wide text-institutional-text/60">Indicadores de participação e presença</h3>
+                        <p class="text-xs text-institutional-text/50">
+                            Total na base: <strong class="text-institutional-700">{{ metrics.total_registered }}</strong> pessoas
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                        <StatCard
+                            v-for="card in cards"
+                            :key="card.label"
+                            :label="card.label"
+                            :value="card.value"
+                            :hint="card.hint"
+                            :accent="card.accent"
+                            :dot="card.dot"
+                            :highlight="card.highlight"
+                        />
+                    </div>
                 </div>
 
-                <!-- Participação prevista e taxas -->
+                <!-- Painéis de progresso + regras -->
                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                    <StatCard
-                        variant="solid"
-                        label="Participação prevista"
-                        :value="metrics.expected_participants"
-                        :hint="`Público estimado: ${metrics.estimated_audience}`"
-                    >
-                        <template #value>
+                    <!-- Total previsto -->
+                    <UiCard padding="p-5">
+                        <div class="flex items-start justify-between">
+                            <p class="text-xs font-medium uppercase tracking-wide text-institutional-text/60">Total previsto</p>
+                            <p class="text-[11px] text-institutional-text/40">Titulares + Acomp. + Repr.</p>
+                        </div>
+                        <p class="mt-1 text-3xl font-bold text-institutional-900">
                             {{ metrics.expected_participants }}
-                            <span class="text-lg font-normal text-white/50"> / {{ metrics.estimated_audience }}</span>
-                        </template>
-                    </StatCard>
-                    <StatCard label="Taxa de confirmação" :value="rate(metrics.confirmation_rate)" accent="base" />
-                    <StatCard label="Taxa de comparecimento" :value="rate(metrics.attendance_rate)" accent="interaction" />
+                            <span class="text-base font-normal text-institutional-text/40">/ {{ metrics.estimated_audience }} estimados</span>
+                        </p>
+                        <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-institutional-100">
+                            <div class="h-full rounded-full bg-institutional-600 transition-all" :style="{ width: confirmationPct + '%' }"></div>
+                        </div>
+                        <div class="mt-3 flex items-center justify-between text-xs">
+                            <span class="text-institutional-text/60">Taxa de confirmação:</span>
+                            <strong class="text-institutional-900">{{ rate(metrics.confirmation_rate) }}</strong>
+                        </div>
+                        <div class="mt-1 flex items-center justify-between text-xs">
+                            <span class="text-institutional-text/60">Saldo para capacidade:</span>
+                            <strong class="text-institutional-700">{{ metrics.capacity_balance }} vagas disponíveis</strong>
+                        </div>
+                    </UiCard>
+
+                    <!-- Comparecimento real -->
+                    <UiCard padding="p-5">
+                        <div class="flex items-start justify-between">
+                            <p class="text-xs font-medium uppercase tracking-wide text-institutional-text/60">Comparecimento real</p>
+                            <p class="text-[11px] text-institutional-text/40">Credenciados / Previstos</p>
+                        </div>
+                        <p class="mt-1 text-3xl font-bold text-emerald-700">
+                            {{ metrics.present }}
+                            <span class="text-base font-normal text-institutional-text/40">/ {{ metrics.expected_participants }} previstos</span>
+                        </p>
+                        <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-emerald-100">
+                            <div class="h-full rounded-full bg-emerald-600 transition-all" :style="{ width: attendancePct + '%' }"></div>
+                        </div>
+                        <div class="mt-3 flex items-center justify-between text-xs">
+                            <span class="text-institutional-text/60">Taxa de comparecimento:</span>
+                            <strong class="text-institutional-900">{{ rate(metrics.attendance_rate) }}</strong>
+                        </div>
+                        <div class="mt-1 flex items-center justify-between text-xs">
+                            <span class="text-institutional-text/60">Aguardando chegada:</span>
+                            <strong class="text-amber-700">{{ metrics.awaiting_arrival }} pessoas</strong>
+                        </div>
+                    </UiCard>
+
+                    <!-- Regras do cerimonial -->
+                    <UiCard padding="p-5">
+                        <h3 class="flex items-center gap-2 text-sm font-semibold text-institutional-900">
+                            <svg class="h-5 w-5 text-institutional-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg>
+                            Regras do cerimonial (PRD)
+                        </h3>
+                        <ul class="mt-3 space-y-2 text-xs text-institutional-text/70">
+                            <li><strong class="text-institutional-900">Zero dupla contagem:</strong> representantes e acompanhantes são contados uma única vez (CA-07).</li>
+                            <li><strong class="text-institutional-900">Promoção automática:</strong> acompanhante que confirma sem o titular vira representante (CA-05).</li>
+                            <li><strong class="text-institutional-900">Auditoria contínua:</strong> toda alteração registra operador e carimbo temporal (CA-10).</li>
+                        </ul>
+                        <UiButton :href="route('guests.index', event.id)" variant="ghost" size="sm" class="mt-3 !px-0">
+                            Ir para lista completa de convidados →
+                        </UiButton>
+                    </UiCard>
                 </div>
             </div>
         </div>

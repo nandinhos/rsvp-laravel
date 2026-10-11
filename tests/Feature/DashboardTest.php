@@ -116,3 +116,27 @@ it('sinaliza conflitos pendentes no dashboard (CA-06)', function () {
             ->where('metrics.has_pending_conflicts', true)
         );
 });
+
+/**
+ * Campos derivados do painel: total na base, saldo de capacidade e aguardando chegada.
+ */
+it('expõe métricas derivadas de capacidade e comparecimento', function () {
+    $event = Event::factory()->create(['estimated_audience' => 10]);
+    $gestor = dashMember($event);
+    $rsvp = new RsvpService;
+
+    // 2 confirmados, 1 pendente => previstos=2, total=3.
+    $a = Guest::factory()->inEvent($event)->create();
+    $b = Guest::factory()->inEvent($event)->create();
+    Guest::factory()->inEvent($event)->create();
+    $rsvp->confirm($a);
+    $rsvp->confirm($b);
+
+    $this->actingAs($gestor)
+        ->get(route('events.dashboard', $event->id))
+        ->assertInertia(fn ($page) => $page
+            ->where('metrics.total_registered', 3)
+            ->where('metrics.capacity_balance', 8)   // 10 - 2 previstos
+            ->where('metrics.awaiting_arrival', 2)   // 2 previstos - 0 presentes
+        );
+});

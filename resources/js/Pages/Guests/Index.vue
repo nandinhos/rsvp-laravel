@@ -111,14 +111,6 @@ function confirmGuest(guest) {
     });
 }
 
-function checkInGuest(guest) {
-    actWithUndo('guests.check-in', guest, {
-        title: (g) => `Credenciamento registrado: #${g.number} ${g.full_name}`,
-        undoLabel: 'Desfazer check-in',
-        undoRoute: 'guests.revert-check-in',
-    });
-}
-
 function declineGuest(guest) {
     actWithUndo('guests.decline', guest, {
         title: (g) => `Ausência registrada: #${g.number} ${g.full_name}`,
@@ -250,7 +242,6 @@ const inputClass =
                                     <div v-if="can.operate" class="inline-flex gap-2">
                                         <UiButton v-if="g.rsvp_status !== 'confirmado'" size="sm" variant="success" @click="confirmGuest(g)">Confirmar</UiButton>
                                         <UiButton v-if="g.rsvp_status !== 'nao_participara'" size="sm" variant="danger" @click="declineGuest(g)">Recusar</UiButton>
-                                        <UiButton v-if="g.attendance_status !== 'presente'" size="sm" variant="primary" @click="checkInGuest(g)">Check-in</UiButton>
                                     </div>
                                 </td>
                             </tr>
@@ -276,7 +267,7 @@ const inputClass =
                         </div>
                         <div v-if="can.operate" class="mt-3 flex gap-2">
                             <UiButton v-if="g.rsvp_status !== 'confirmado'" variant="success" class="flex-1" @click="confirmGuest(g)">Confirmar</UiButton>
-                            <UiButton v-if="g.attendance_status !== 'presente'" variant="primary" class="flex-1" @click="checkInGuest(g)">Check-in</UiButton>
+                            <UiButton v-if="g.rsvp_status !== 'nao_participara'" variant="danger" class="flex-1" @click="declineGuest(g)">Recusar</UiButton>
                         </div>
                     </UiCard>
                 </div>
