@@ -47,8 +47,19 @@ const cards = computed(() => [
     { label: 'Representantes', value: props.metrics.confirmed_representatives, hint: 'Substituições', accent: 'interaction', dot: 'violet' },
     { label: 'Não confirmados', value: props.metrics.not_confirmed, hint: 'Pendentes/Recusas', accent: 'ink', dot: 'amber' },
     { label: 'Presenças', value: props.metrics.present, hint: 'Portaria / Check-in', accent: 'base', dot: 'emerald', highlight: true },
-    { label: 'Público estimado', value: props.metrics.estimated_audience, hint: 'Configurações', accent: 'ink', dot: 'slate' },
 ]);
+
+/** Avaliação do público real (presenças) frente ao estimado (planejamento). */
+const audience = computed(() => {
+    const diff = props.metrics.audience_diff ?? 0;
+    if (diff > 0) {
+        return { label: 'Acima do planejamento', tone: 'text-emerald-700', bg: 'bg-emerald-50', sign: '+', value: diff };
+    }
+    if (diff < 0) {
+        return { label: 'Abaixo do planejamento', tone: 'text-amber-700', bg: 'bg-amber-50', sign: '', value: diff };
+    }
+    return { label: 'Conforme o planejamento', tone: 'text-institutional-600', bg: 'bg-institutional-50', sign: '', value: 0 };
+});
 
 function rate(value) {
     return value === null ? 'Indisponível' : `${value}%`;
@@ -158,6 +169,28 @@ const attendancePct = computed(() => Math.min(100, props.metrics.attendance_rate
                             :dot="card.dot"
                             :highlight="card.highlight"
                         />
+
+                        <!-- Público estimado × real, com diferencial de planejamento -->
+                        <div class="stat-card group relative overflow-hidden rounded-2xl border border-institutional-900/8 bg-white p-5 shadow-sm">
+                            <span class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-institutional-600 to-institutional-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
+                            <div class="flex items-center justify-between">
+                                <p class="text-xs font-medium uppercase tracking-wide text-institutional-text/50">Público estimado</p>
+                                <span class="h-2.5 w-2.5 rounded-full bg-slate-400"></span>
+                            </div>
+                            <p class="mt-1.5 text-3xl font-bold text-institutional-900">{{ metrics.estimated_audience }}</p>
+
+                            <p class="mt-2 text-xs font-medium uppercase tracking-wide text-institutional-text/50">Público real</p>
+                            <p class="text-2xl font-bold text-emerald-700">{{ metrics.actual_audience }}</p>
+
+                            <span
+                                class="mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                                :class="[audience.bg, audience.tone]"
+                                :title="`Diferença: ${audience.sign}${audience.value} em relação ao estimado`"
+                            >
+                                {{ audience.label }}
+                                <span v-if="audience.value !== 0">({{ audience.sign }}{{ audience.value }})</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
 

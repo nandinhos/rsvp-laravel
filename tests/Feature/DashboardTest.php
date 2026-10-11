@@ -140,3 +140,46 @@ it('expõe métricas derivadas de capacidade e comparecimento', function () {
             ->where('metrics.awaiting_arrival', 2)   // 2 previstos - 0 presentes
         );
 });
+
+/**
+ * Público real × estimado e diferencial de planejamento.
+ */
+it('expõe público real e diff abaixo do planejamento', function () {
+    $event = Event::factory()->create(['estimated_audience' => 10]);
+    $gestor = dashMember($event);
+    $operador = dashMember($event, EventRole::Operador);
+    $rsvp = new RsvpService;
+
+    // 1 confirmado e credenciado; estimado 10 => real 1, diff -9.
+    $a = Guest::factory()->inEvent($event)->create();
+    $rsvp->confirm($a);
+    app(App\Services\CheckInService::class)->checkIn($a->fresh(), $operador);
+
+    $this->actingAs($gestor)
+        ->get(route('events.dashboard', $event->id))
+        ->assertInertia(fn ($page) => $page
+            ->where('metrics.actual_audience', 1)
+            ->where('metrics.audience_diff', -9)
+        );
+});
+
+it('expõe diff acima do planejamento quando o real supera o estimado', function () {
+    $event = Event::factory()->create(['estimated_audience' => 1]);
+    $gestor = dashMember($event);
+    $operador = dashMember($event, EventRole::Operador);
+    $rsvp = new RsvpService;
+
+    // 2 presentes, estimado 1 => diff +1.
+    foreach (range(1, 2) as $i) {
+        $g = Guest::factory()->inEvent($event)->create();
+        $rsvp->confirm($g);
+        app(App\Services\CheckInService::class)->checkIn($g->fresh(), $operador);
+    }
+
+    $this->actingAs($gestor)
+        ->get(route('events.dashboard', $event->id))
+        ->assertInertia(fn ($page) => $page
+            ->where('metrics.actual_audience', 2)
+            ->where('metrics.audience_diff', 1)
+        );
+});
