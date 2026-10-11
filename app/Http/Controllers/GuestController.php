@@ -71,6 +71,58 @@ class GuestController extends Controller
         ]);
     }
 
+    /**
+     * Estação de credenciamento (portaria): busca unificada, ordenação que
+     * prioriza quem aguarda, contadores ao vivo e credenciamento rápido (CA-09, CA-12).
+     */
+    public function checkInStation(Request $request, Event $event): Response
+    {
+        Gate::authorize('view', $event);
+
+        $search = (string) $request->query('search', '');
+
+        $guests = $this->listQuery->build($event, ['search' => $search])
+            ->reorder()
+            // Prioriza aguardando antes de presente; depois pela numeração.
+            ->orderByRaw("CASE attendance_status WHEN 'aguardando' THEN 0 ELSE 1 END")
+            ->orderBy('number')
+            ->limit(100)
+            ->get()
+            ->map(fn (Guest $g) => [
+                'id' => $g->id,
+                'number' => $g->number,
+                'full_name' => $g->full_name,
+                'category' => $g->category?->name,
+                'rsvp_status' => $g->rsvp_status->value,
+                'rsvp_label' => $g->rsvp_status->label(),
+                'role_label' => $g->participation_role->label(),
+                'attendance_status' => $g->attendance_status->value,
+                'attendance_label' => $g->attendance_status->label(),
+            ]);
+
+        $all = $event->guests()->get(['rsvp_status', 'attendance_status']);
+
+        return Inertia::render('Guests/CheckIn', [
+            'event' => [
+                'id' => $event->id,
+                'name' => $event->name,
+                'status' => $event->status->value,
+            ],
+            'guests' => $guests,
+            'search' => $search,
+            'counters' => [
+                'present' => $all->where('attendance_status', AttendanceStatus::Presente->value)->count(),
+                'confirmed' => $all->where('rsvp_status', RsvpStatus::Confirmado->value)->count(),
+                'awaiting' => $all->where('attendance_status', AttendanceStatus::Aguardando->value)
+                    ->where('rsvp_status', RsvpStatus::Confirmado->value)->count(),
+                'total' => $all->count(),
+            ],
+            'can' => [
+                'operate' => $request->user()->can('operate', $event),
+            ],
+        ]);
+    }
+
     public function store(Request $request, Event $event): RedirectResponse
     {
         Gate::authorize('manageGuests', $event);

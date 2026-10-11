@@ -156,6 +156,7 @@ const inputClass =
                     {{ event.name }} — Convidados
                 </h2>
                 <div class="flex flex-wrap gap-2">
+                    <UiButton v-if="can.operate" :href="route('guests.check-in-station', event.id)" variant="primary">Credenciamento</UiButton>
                     <UiButton v-if="can.export" external :href="exportUrl('guests.export.excel')" variant="secondary" size="md">Excel</UiButton>
                     <UiButton v-if="can.export" external :href="exportUrl('guests.export.pdf')" variant="secondary" size="md">PDF</UiButton>
                     <UiButton v-if="can.manageGuests" :href="route('guests.import.create', event.id)" variant="primary">Importar</UiButton>

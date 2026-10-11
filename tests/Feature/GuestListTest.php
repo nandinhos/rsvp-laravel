@@ -265,3 +265,56 @@ it('bloqueia reversões em evento encerrado (CA-14)', function () {
 
     expect($guest->fresh()->rsvp_status)->toBe(RsvpStatus::Confirmado);
 });
+
+/**
+ * Estação de credenciamento (portaria).
+ */
+it('nega estação de credenciamento a quem não pertence ao evento (CA-01)', function () {
+    $event = Event::factory()->create();
+    $outsider = User::factory()->create();
+
+    $this->actingAs($outsider)
+        ->get(route('guests.check-in-station', $event->id))
+        ->assertForbidden();
+});
+
+it('renderiza a estação de credenciamento com contadores ao vivo', function () {
+    $event = Event::factory()->create();
+    $operador = member($event, EventRole::Operador);
+
+    Guest::factory()->inEvent($event)->create([
+        'full_name' => 'Ana', 'rsvp_status' => RsvpStatus::Confirmado,
+    ]);
+    $presente = Guest::factory()->inEvent($event)->create([
+        'full_name' => 'Bruno', 'rsvp_status' => RsvpStatus::Confirmado,
+    ]);
+    app(CheckInService::class)->checkIn($presente, $operador);
+
+    $this->actingAs($operador)
+        ->get(route('guests.check-in-station', $event->id))
+        ->assertInertia(fn ($page) => $page
+            ->component('Guests/CheckIn')
+            ->where('counters.total', 2)
+            ->where('counters.present', 1)
+            ->where('counters.awaiting', 1)
+            ->where('counters.confirmed', 2)
+            ->has('guests', 2)
+        );
+});
+
+it('a estação prioriza convidados aguardando na ordenação', function () {
+    $event = Event::factory()->create();
+    $operador = member($event, EventRole::Operador);
+
+    $presente = Guest::factory()->inEvent($event)->create(['full_name' => 'Primeiro numero']);
+    app(CheckInService::class)->checkIn($presente, $operador);
+    Guest::factory()->inEvent($event)->create(['full_name' => 'Segundo numero']);
+
+    // O presente tem número menor, mas deve aparecer DEPOIS do que aguarda.
+    $this->actingAs($operador)
+        ->get(route('guests.check-in-station', $event->id))
+        ->assertInertia(fn ($page) => $page
+            ->where('guests.0.attendance_status', 'aguardando')
+            ->where('guests.1.attendance_status', 'presente')
+        );
+});

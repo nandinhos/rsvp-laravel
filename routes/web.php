@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
         Route::post('conflicts/{relationship}/resolve', [ConflictController::class, 'resolve'])->name('conflicts.resolve');
 
         Route::get('guests', [GuestController::class, 'index'])->name('guests.index');
+        Route::get('check-in', [GuestController::class, 'checkInStation'])->name('guests.check-in-station');
         Route::post('guests', [GuestController::class, 'store'])->name('guests.store');
         Route::patch('guests/{guest}', [GuestController::class, 'update'])->name('guests.update');
         Route::delete('guests/{guest}', [GuestController::class, 'destroy'])->name('guests.destroy');
