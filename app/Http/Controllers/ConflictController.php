@@ -31,7 +31,12 @@ class ConflictController extends Controller
         $conflicts = $event->relationships()
             ->where('is_conflict', true)
             ->whereNull('resolved_at')
-            ->with(['guest:id,full_name,number', 'relatedGuest:id,full_name,number'])
+            ->with([
+                'guest:id,full_name,number,guest_category_id',
+                'guest.category:id,name',
+                'relatedGuest:id,full_name,number,guest_category_id',
+                'relatedGuest.category:id,name',
+            ])
             ->get()
             ->map(fn (GuestRelationship $r) => [
                 'id' => $r->id,
@@ -39,11 +44,13 @@ class ConflictController extends Controller
                     'id' => $r->guest->id,
                     'name' => $r->guest->full_name,
                     'number' => $r->guest->number,
+                    'category' => $r->guest->category?->name,
                 ],
                 'host' => [
                     'id' => $r->relatedGuest->id,
                     'name' => $r->relatedGuest->full_name,
                     'number' => $r->relatedGuest->number,
+                    'category' => $r->relatedGuest->category?->name,
                 ],
             ]);
 
