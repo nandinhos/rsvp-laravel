@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
         // Ações rápidas (PRD §5).
         Route::post('guests/{guest}/confirm', [GuestController::class, 'confirm'])->name('guests.confirm');
         Route::post('guests/{guest}/decline', [GuestController::class, 'decline'])->name('guests.decline');
+        Route::post('guests/{guest}/reconsider', [GuestController::class, 'reconsider'])->name('guests.reconsider');
         Route::post('guests/{guest}/check-in', [GuestController::class, 'checkIn'])->name('guests.check-in');
 
         // Reversões (desfazer imediato — padrão de undo).

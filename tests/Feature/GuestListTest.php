@@ -350,3 +350,54 @@ it('serviço de check-in rejeita convidado não confirmado', function () {
     expect(fn () => app(CheckInService::class)->checkIn($pendente, $operador))
         ->toThrow(App\Exceptions\GuestDomainException::class);
 });
+
+/**
+ * Reconsideração (mudança de escolha): só quem recusou pode reconsiderar,
+ * voltando a pendente — nunca reabre recusa silenciosamente.
+ */
+it('reconsidera uma recusa, voltando o RSVP para pendente', function () {
+    $event = Event::factory()->create();
+    $operador = member($event, EventRole::Operador);
+    $guest = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::NaoParticipara]);
+
+    $this->actingAs($operador)
+        ->post(route('guests.reconsider', [$event->id, $guest->id]))
+        ->assertRedirect();
+
+    expect($guest->fresh()->rsvp_status)->toBe(RsvpStatus::Pendente);
+});
+
+it('rejeita reconsiderar quem não está em "não participará" (422)', function () {
+    $event = Event::factory()->create();
+    $operador = member($event, EventRole::Operador);
+    $confirmado = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::Confirmado]);
+
+    $this->actingAs($operador)
+        ->post(route('guests.reconsider', [$event->id, $confirmado->id]))
+        ->assertStatus(422);
+
+    // Estado preservado.
+    expect($confirmado->fresh()->rsvp_status)->toBe(RsvpStatus::Confirmado);
+});
+
+it('leitor não pode reconsiderar', function () {
+    $event = Event::factory()->create();
+    $leitor = member($event, EventRole::Leitor);
+    $guest = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::NaoParticipara]);
+
+    $this->actingAs($leitor)
+        ->post(route('guests.reconsider', [$event->id, $guest->id]))
+        ->assertForbidden();
+});
+
+it('bloqueia reconsiderar em evento encerrado (CA-14)', function () {
+    $event = Event::factory()->closed()->create();
+    $operador = member($event, EventRole::Operador);
+    $guest = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::NaoParticipara]);
+
+    $this->actingAs($operador)
+        ->post(route('guests.reconsider', [$event->id, $guest->id]))
+        ->assertForbidden();
+
+    expect($guest->fresh()->rsvp_status)->toBe(RsvpStatus::NaoParticipara);
+});

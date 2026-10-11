@@ -119,6 +119,16 @@ function declineGuest(guest) {
     });
 }
 
+/** Mudança de escolha: quem recusou volta a pendente, de forma explícita. */
+function reconsiderGuest(guest) {
+    actWithUndo('guests.reconsider', guest, {
+        title: (g) => `Recusa reconsiderada: #${g.number} ${g.full_name}`,
+        message: 'RSVP retornou para Pendente.',
+        undoLabel: 'Desfazer',
+        undoRoute: 'guests.undo-rsvp',
+    });
+}
+
 const rsvpVariant = {
     pendente: 'warning',
     confirmado: 'success',
@@ -240,8 +250,9 @@ const inputClass =
                                 <td class="px-4 py-3"><UiBadge :variant="attendanceVariant[g.attendance_status]">{{ g.attendance_label }}</UiBadge></td>
                                 <td class="px-4 py-3 text-right">
                                     <div v-if="can.operate" class="inline-flex gap-2">
-                                        <UiButton v-if="g.rsvp_status !== 'confirmado'" size="sm" variant="success" @click="confirmGuest(g)">Confirmar</UiButton>
+                                        <UiButton v-if="g.rsvp_status === 'pendente'" size="sm" variant="success" @click="confirmGuest(g)">Confirmar</UiButton>
                                         <UiButton v-if="g.rsvp_status !== 'nao_participara'" size="sm" variant="danger" @click="declineGuest(g)">Recusar</UiButton>
+                                        <UiButton v-if="g.rsvp_status === 'nao_participara'" size="sm" variant="neutral" @click="reconsiderGuest(g)">Reconsiderar</UiButton>
                                     </div>
                                 </td>
                             </tr>
@@ -266,8 +277,9 @@ const inputClass =
                             <UiBadge :variant="attendanceVariant[g.attendance_status]">{{ g.attendance_label }}</UiBadge>
                         </div>
                         <div v-if="can.operate" class="mt-3 flex gap-2">
-                            <UiButton v-if="g.rsvp_status !== 'confirmado'" variant="success" class="flex-1" @click="confirmGuest(g)">Confirmar</UiButton>
+                            <UiButton v-if="g.rsvp_status === 'pendente'" variant="success" class="flex-1" @click="confirmGuest(g)">Confirmar</UiButton>
                             <UiButton v-if="g.rsvp_status !== 'nao_participara'" variant="danger" class="flex-1" @click="declineGuest(g)">Recusar</UiButton>
+                            <UiButton v-if="g.rsvp_status === 'nao_participara'" variant="neutral" class="flex-1" @click="reconsiderGuest(g)">Reconsiderar</UiButton>
                         </div>
                     </UiCard>
                 </div>
