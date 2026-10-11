@@ -36,7 +36,9 @@ services:
       APP_NAME: "RSVP"
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_KEY: "base64:G8h84OXTAIT5o75JkrGnTCcM8uTxsitfs4rGdb7+G4o="
+      # Chave de aplicação: defina APP_KEY no seu ambiente/.env para produção.
+      # O fallback abaixo é apenas uma chave de DEMONSTRAÇÃO para subida local.
+      APP_KEY: "${APP_KEY:-base64:G8h84OXTAIT5o75JkrGnTCcM8uTxsitfs4rGdb7+G4o=}"
       APP_URL: "http://localhost:8900"
       APP_LOCALE: pt_BR
       DB_CONNECTION: pgsql

@@ -1,58 +1,172 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# RSVP — Gestão de Convidados, Confirmações e Presença
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Plataforma web **mobile-first** para gestão de convidados de eventos corporativos,
+institucionais e protocolares: cadastro, classificação, confirmações RSVP,
+acompanhantes, representantes, credenciamento (check-in), importação, exportação
+e auditoria — com **isolamento total por evento**.
 
-## About Laravel
+> Premissa central do produto: **não confundir pessoas, convites, confirmações,
+> relações de representação e presenças.** Esse cuidado resolve a maior parte dos
+> problemas de contagem e inconsistência em sistemas RSVP.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Sumário
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- [Principais recursos](#principais-recursos)
+- [Stack](#stack)
+- [Início rápido (Docker)](#início-rápido-docker)
+- [Início rápido (local)](#início-rápido-local)
+- [Usuários de demonstração](#usuários-de-demonstração)
+- [Testes](#testes)
+- [Critérios de aceite](#critérios-de-aceite)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Documentação adicional](#documentação-adicional)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Principais recursos
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Recurso | Descrição |
+|---|---|
+| **RSVP ≠ Presença** | Estados de confirmação (pendente, confirmado, não participará) distintos do comparecimento físico. |
+| **Acompanhantes & Representantes** | Relações entre pessoas, sem duplicidade. Acompanhante de titular não confirmado que confirma é **promovido a representante**, preservando a origem. |
+| **Conflito de representação** | Titular e representante ambos confirmados geram pendência **bloqueante** de resolução explícita — nunca silenciosa. |
+| **Credenciamento (check-in)** | Idempotente; registra horário e responsável. Check-ins repetidos não duplicam presenças. |
+| **Isolamento por evento** | Permissões por evento validadas no servidor; sem acesso cruzado nem por alteração de URL. |
+| **Importação inteligente** | Excel/CSV/TXT/Markdown + colagem + manual, com pré-visualização de erros/avisos antes de persistir. |
+| **Exportações** | Excel (.xlsx) e PDF premium, respeitando filtros e permissões; guarda contra injeção de fórmula. |
+| **Dashboard de indicadores** | Participação prevista, taxas de confirmação/comparecimento, sem dupla contagem. |
+| **Auditoria** | Registro append-only de operações críticas com autor, instante e contexto. |
+| **Ciclo de vida do evento** | Rascunho → ativo → encerrado; encerramento bloqueia alterações, reabertura é auditada. |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Perfis de acesso (por evento): **Administrador**, **Gestor**, **Operador**, **Leitor**.
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Stack
+
+- **Backend:** Laravel 13 (PHP 8.4)
+- **Frontend:** Inertia.js + Vue 3 + Tailwind CSS 3 (+ Alpine.js na landing)
+- **Banco:** PostgreSQL 16 (SQLite em memória nos testes)
+- **Testes:** Pest
+- **Documentos:** PhpSpreadsheet (xlsx), dompdf (PDF)
+- **Infra:** Docker + Docker Compose
+
+---
+
+## Início rápido (Docker)
+
+Pré-requisitos: Docker e Docker Compose.
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/nandinhos/rsvp-laravel.git
+cd rsvp-laravel
+docker compose up -d --build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+A stack sobe encapsulada em portas que **não conflitam** com serviços comuns:
 
-## Contributing
+| Serviço | URL / porta |
+|---|---|
+| Aplicação | http://localhost:8900 |
+| PostgreSQL | localhost:55432 (db `rsvp_kiro`, user `rsvp`, senha `rsvp`) |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Na primeira subida o container executa migrations e **seed** automaticamente
+(usuários de demonstração + evento de exemplo). Acesse http://localhost:8900.
 
-## Code of Conduct
+> Para produção, defina `APP_KEY` no ambiente (veja [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)).
+> O valor presente no `docker-compose.yml` é apenas um fallback de demonstração.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## Início rápido (local)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Pré-requisitos: PHP 8.4+, Composer, Node 20+, PostgreSQL 16.
 
-## License
+```bash
+cp .env.example .env
+composer install
+npm install
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Configure as credenciais do banco no .env, então:
+php artisan key:generate
+php artisan migrate --seed
+npm run build          # ou: npm run dev (hot reload)
+php artisan serve
+```
+
+---
+
+## Usuários de demonstração
+
+Criados pelo seeder (senha padrão: `password`). Exibidos também abaixo do formulário de login.
+
+| Perfil | E-mail | Pode |
+|---|---|---|
+| Administrador | `admin@rsvp.test` | tudo: permissões, encerrar/reabrir, auditoria |
+| Gestor | `gestor@rsvp.test` | convidados, vínculos, importar, exportar |
+| Operador | `operador@rsvp.test` | confirmar, recusar, check-in, resolver conflitos |
+| Leitor | `leitor@rsvp.test` | somente consulta |
+
+Evento semente: **Cerimônia Institucional 2026**, com categorias padrão e convidados de exemplo
+(incluindo o caso de promoção acompanhante → representante).
+
+---
+
+## Testes
+
+```bash
+./vendor/bin/pest            # suíte completa
+./vendor/bin/pest --filter=GuestDomain   # um grupo
+./vendor/bin/pint            # code style (PHP)
+```
+
+Os testes rodam sobre **SQLite em memória** (determinístico, isolado do banco de dev).
+
+---
+
+## Critérios de aceite
+
+A implementação é guiada por 14 critérios de aceite (CA-01 a CA-14) cobertos por testes
+automatizados — isolamento entre eventos, regras de representação, idempotência de check-in,
+indicadores sem dupla contagem, importação com pré-visualização, exportação com permissão
+server-side, auditoria e encerramento de evento. Detalhes em
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+---
+
+## Estrutura do projeto
+
+```
+app/
+├── Enums/                 # Estados de domínio (RSVP, papel, presença, perfil...)
+├── Http/Controllers/      # Event, Dashboard, Guest, GuestImport, GuestExport, Conflict
+├── Models/                # Event, EventUser, GuestCategory, Guest, GuestRelationship, AuditLog, User
+├── Policies/              # EventPolicy (autorização por evento)
+└── Services/              # Regras de domínio (RSVP, vínculos, métricas, check-in, numeração)
+    ├── Import/            # Pipeline de importação (parser, analyzer, persister)
+    └── Export/            # Exportadores Excel e PDF
+resources/js/
+├── Components/ui/         # Biblioteca de componentes premium (UiCard, StatCard, UiButton...)
+├── Layouts/               # AuthenticatedLayout, GuestLayout (login split-screen)
+└── Pages/                 # Events, Guests, Auth (Inertia/Vue)
+resources/views/
+└── landing.blade.php      # Landing page animada (Blade + Alpine)
+docs/                      # Documentação de arquitetura, desenvolvimento e deploy
+```
+
+---
+
+## Documentação adicional
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — modelo de domínio, entidades, regras e decisões
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — fluxo de desenvolvimento, testes, convenções, design system
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Docker, variáveis de ambiente, operações
+- [CONTRIBUTING.md](CONTRIBUTING.md) — como contribuir
+
+---
+
+## Licença
+
+[MIT](LICENSE).
