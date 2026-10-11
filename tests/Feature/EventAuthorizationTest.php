@@ -78,3 +78,23 @@ it('mantém papéis independentes entre eventos (CA-01)', function () {
     expect($user->can('administer', $eventA))->toBeTrue();
     expect($user->can('administer', $eventB))->toBeFalse();
 });
+
+/**
+ * Seletor de evento no header: a prop compartilhada authorizedEvents
+ * expõe somente os eventos vinculados ao usuário (CA-01).
+ */
+it('compartilha apenas eventos autorizados no header (CA-01)', function () {
+    $user = User::factory()->create();
+    $meu = Event::factory()->create(['name' => 'Meu Evento']);
+    Event::factory()->create(['name' => 'Evento Alheio']);
+
+    $meu->users()->attach($user, ['role' => EventRole::Operador->value]);
+
+    $this->actingAs($user)
+        ->get(route('events.index'))
+        ->assertInertia(fn ($page) => $page
+            ->has('authorizedEvents', 1)
+            ->where('authorizedEvents.0.name', 'Meu Evento')
+            ->where('authorizedEvents.0.id', $meu->id)
+        );
+});

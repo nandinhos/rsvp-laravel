@@ -5,9 +5,17 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import ToastContainer from '@/Components/ui/ToastContainer.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const showingNavigationDropdown = ref(false);
+
+const page = usePage();
+const authorizedEvents = computed(() => page.props.authorizedEvents ?? []);
+
+function switchEvent(eventId) {
+    router.visit(route('events.dashboard', eventId));
+}
 </script>
 
 <template>
@@ -44,6 +52,43 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                            <!-- Seletor de evento -->
+                            <div v-if="authorizedEvents.length" class="relative me-3">
+                                <Dropdown align="right" width="60">
+                                    <template #trigger>
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-2 rounded-md border border-institutional-900/10 bg-white px-3 py-2 text-sm font-medium text-institutional-text transition hover:bg-institutional-50"
+                                            title="Trocar evento ativo"
+                                        >
+                                            <svg class="h-4 w-4 text-institutional-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />
+                                            </svg>
+                                            <span class="max-w-[160px] truncate">Trocar evento</span>
+                                            <svg class="h-4 w-4 text-institutional-text/50" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                        </button>
+                                    </template>
+                                    <template #content>
+                                        <div class="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-institutional-text/40">
+                                            Eventos autorizados ({{ authorizedEvents.length }})
+                                        </div>
+                                        <button
+                                            v-for="evt in authorizedEvents"
+                                            :key="evt.id"
+                                            type="button"
+                                            class="flex w-full items-start gap-2 px-4 py-2 text-left text-sm text-institutional-text transition hover:bg-institutional-50"
+                                            @click="switchEvent(evt.id)"
+                                        >
+                                            <span class="min-w-0 flex-1 truncate font-medium">{{ evt.name }}</span>
+                                            <span
+                                                class="shrink-0 text-[10px] font-semibold uppercase"
+                                                :class="evt.status === 'ativo' ? 'text-emerald-600' : evt.status === 'encerrado' ? 'text-institutional-text/40' : 'text-amber-600'"
+                                            >{{ evt.status }}</span>
+                                        </button>
+                                    </template>
+                                </Dropdown>
+                            </div>
+
                             <!-- Settings Dropdown -->
                             <div class="relative ms-3">
                                 <Dropdown align="right" width="48">
