@@ -127,6 +127,35 @@ it('resolve conflito mantendo o representante (CA-06)', function () {
     expect($rep->fresh()->rsvp_status)->toBe(RsvpStatus::Confirmado);
 });
 
+it('resolve conflito rebaixando o representante a acompanhante, mantendo ambos (CA-06)', function () {
+    $event = Event::factory()->create();
+    $operador = auditMember($event, EventRole::Operador);
+    $rsvp = new RsvpService;
+    $links = new GuestRelationshipService;
+
+    $host = Guest::factory()->inEvent($event)->create();
+    $rep = Guest::factory()->inEvent($event)->create();
+    $links->attachCompanion($rep, $host);
+    $rsvp->confirm($rep);  // vira representante
+    $rsvp->confirm($host); // conflito
+
+    $link = $rep->hostRelationship()->first();
+    expect($link->is_conflict)->toBeTrue();
+
+    $this->actingAs($operador)
+        ->post(route('conflicts.resolve', [$event->id, $link->id]), ['keep' => 'both'])
+        ->assertRedirect();
+
+    $link->refresh();
+    // Conflito resolvido; ambos permanecem confirmados.
+    expect($link->is_conflict)->toBeFalse();
+    expect($link->type)->toBe(App\Enums\RelationshipType::Acompanhante);
+    expect($host->fresh()->rsvp_status)->toBe(RsvpStatus::Confirmado);
+    expect($rep->fresh()->rsvp_status)->toBe(RsvpStatus::Confirmado);
+    // Representante rebaixado a acompanhante.
+    expect($rep->fresh()->participation_role)->toBe(App\Enums\ParticipationRole::Acompanhante);
+});
+
 /**
  * CA-10 — página de auditoria protegida (somente administrador).
  */

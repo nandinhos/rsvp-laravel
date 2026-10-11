@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ParticipationRole;
+use App\Enums\RelationshipType;
 use App\Enums\RsvpStatus;
 use App\Models\Event;
 use App\Models\GuestRelationship;
@@ -52,8 +54,11 @@ class ConflictController extends Controller
     }
 
     /**
-     * Resolve o conflito mantendo 'host' (titular) ou 'representative'.
-     * O lado não escolhido tem o RSVP revertido para "não participará".
+     * Resolve o conflito escolhendo quem participa:
+     *  - 'host': mantém o titular; representante não participará;
+     *  - 'representative': mantém o representante; titular não participará;
+     *  - 'both': mantém ambos (caso de erro de cadastro) e rebaixa o
+     *    representante de volta a acompanhante — os dois comparecem.
      */
     public function resolve(Request $request, Event $event, GuestRelationship $relationship): RedirectResponse
     {
@@ -62,7 +67,7 @@ class ConflictController extends Controller
         $this->guardOpen($event);
 
         $data = $request->validate([
-            'keep' => ['required', 'in:host,representative'],
+            'keep' => ['required', 'in:host,representative,both'],
         ]);
 
         DB::transaction(function () use ($relationship, $data, $request, $event) {
@@ -73,9 +78,14 @@ class ConflictController extends Controller
             if ($data['keep'] === 'host') {
                 // Mantém o titular; representante não participará.
                 $representative->forceFill(['rsvp_status' => RsvpStatus::NaoParticipara])->save();
-            } else {
+            } elseif ($data['keep'] === 'representative') {
                 // Mantém o representante; titular não participará.
                 $host->forceFill(['rsvp_status' => RsvpStatus::NaoParticipara])->save();
+            } else {
+                // Mantém ambos: rebaixa o representante a acompanhante
+                // (ambos confirmados comparecem; corrige provável erro de cadastro).
+                $relationship->forceFill(['type' => RelationshipType::Acompanhante])->save();
+                $representative->forceFill(['participation_role' => ParticipationRole::Acompanhante])->save();
             }
 
             $relationship->forceFill([

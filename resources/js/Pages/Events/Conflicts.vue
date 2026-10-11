@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import UiButton from '@/Components/ui/UiButton.vue';
 import UiCard from '@/Components/ui/UiCard.vue';
+import UiBadge from '@/Components/ui/UiBadge.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 
 const props = defineProps({
@@ -23,56 +24,85 @@ function resolve(relationshipId, keep) {
     <Head :title="`Conflitos · ${event.name}`" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-institutional-900">Conflitos de representação — {{ event.name }}</h2>
-                <UiButton :href="route('events.dashboard', event.id)" variant="ghost" size="md">Voltar</UiButton>
+        <!-- Hero institucional (estilo landing) -->
+        <section class="bg-gradient-to-br from-institutional-900 to-institutional-700">
+            <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Resolução de representação · CA-06</p>
+                <h1 class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                    Conflitos de representação
+                </h1>
+                <p class="mt-2 max-w-2xl text-sm text-white/70">
+                    {{ event.name }} — quando titular e representante confirmam ao mesmo tempo, a decisão é
+                    explícita e auditada. Nada é alterado silenciosamente.
+                </p>
             </div>
-        </template>
+        </section>
 
         <div class="py-6">
-            <div class="mx-auto max-w-4xl space-y-4 px-4 sm:px-6 lg:px-8">
-                <EmptyState v-if="conflicts.length === 0" message="Nenhum conflito pendente. Tudo resolvido." />
+            <div class="mx-auto max-w-5xl space-y-5 px-4 sm:px-6 lg:px-8">
+                <EmptyState v-if="conflicts.length === 0" title="Nenhum conflito pendente" message="Todos os vínculos estão consistentes." />
 
-                <UiCard v-for="c in conflicts" :key="c.id" padding="p-6">
-                    <p class="mb-4 text-sm text-institutional-text/70">
-                        O titular e seu representante estão ambos confirmados. Escolha quem participará:
-                    </p>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <button
-                            @click="resolve(c.id, 'host')"
-                            class="conflict-choice rounded-xl border border-institutional-200 bg-institutional-50 p-4 text-left"
-                        >
-                            <p class="text-xs font-medium uppercase tracking-wide text-institutional-600">Manter titular</p>
-                            <p class="mt-1 font-semibold text-institutional-900">#{{ c.host.number }} {{ c.host.name }}</p>
-                            <p class="mt-0.5 text-xs text-institutional-text/50">Representante será marcado como não participará</p>
-                        </button>
-                        <button
-                            @click="resolve(c.id, 'representative')"
-                            class="conflict-choice rounded-xl border border-institutional-200 bg-institutional-50 p-4 text-left"
-                        >
-                            <p class="text-xs font-medium uppercase tracking-wide text-institutional-600">Manter representante</p>
-                            <p class="mt-1 font-semibold text-institutional-900">#{{ c.representative.number }} {{ c.representative.name }}</p>
-                            <p class="mt-0.5 text-xs text-institutional-text/50">Titular será marcado como não participará</p>
-                        </button>
+                <UiCard v-for="c in conflicts" :key="c.id" padding="p-0">
+                    <!-- Cabeçalho do conflito -->
+                    <div class="flex items-center gap-2 border-b border-institutional-900/8 px-5 py-3">
+                        <svg class="h-5 w-5 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
+                        <p class="text-sm font-semibold text-institutional-900">Confirmação mútua detectada</p>
                     </div>
+
+                    <!-- Tabela: posição atual × conflitante -->
+                    <div class="overflow-hidden">
+                        <table class="min-w-full divide-y divide-institutional-900/8 text-sm">
+                            <thead class="bg-institutional-50 text-left text-xs font-semibold uppercase tracking-wide text-institutional-text/50">
+                                <tr>
+                                    <th class="px-5 py-3">Posição</th>
+                                    <th class="px-5 py-3">#</th>
+                                    <th class="px-5 py-3">Nome</th>
+                                    <th class="px-5 py-3">Papel</th>
+                                    <th class="px-5 py-3">RSVP</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-institutional-900/6">
+                                <tr>
+                                    <td class="px-5 py-3"><UiBadge variant="info">Titular</UiBadge></td>
+                                    <td class="px-5 py-3 font-mono text-institutional-text/40">#{{ c.host.number }}</td>
+                                    <td class="px-5 py-3 font-medium text-institutional-900">{{ c.host.name }}</td>
+                                    <td class="px-5 py-3 text-institutional-text/70">Titular</td>
+                                    <td class="px-5 py-3"><UiBadge variant="success">Confirmado</UiBadge></td>
+                                </tr>
+                                <tr class="bg-amber-50/40">
+                                    <td class="px-5 py-3"><UiBadge variant="warning">Conflitante</UiBadge></td>
+                                    <td class="px-5 py-3 font-mono text-institutional-text/40">#{{ c.representative.number }}</td>
+                                    <td class="px-5 py-3 font-medium text-institutional-900">{{ c.representative.name }}</td>
+                                    <td class="px-5 py-3 text-institutional-text/70">Representante</td>
+                                    <td class="px-5 py-3"><UiBadge variant="success">Confirmado</UiBadge></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Ações de resolução -->
+                    <div class="flex flex-col gap-2 border-t border-institutional-900/8 px-5 py-4 sm:flex-row sm:flex-wrap">
+                        <UiButton variant="primary" size="md" @click="resolve(c.id, 'host')">
+                            Manter titular (#{{ c.host.number }})
+                        </UiButton>
+                        <UiButton variant="secondary" size="md" @click="resolve(c.id, 'representative')">
+                            Manter representante (#{{ c.representative.number }})
+                        </UiButton>
+                        <UiButton
+                            variant="success"
+                            size="md"
+                            class="sm:ml-auto"
+                            @click="resolve(c.id, 'both')"
+                        >
+                            Rebaixar a acompanhante (manter ambos)
+                        </UiButton>
+                    </div>
+                    <p class="px-5 pb-4 text-xs text-institutional-text/50">
+                        <strong>Manter titular/representante:</strong> o outro é marcado como não participará.
+                        <strong>Rebaixar a acompanhante:</strong> corrige provável erro de cadastro — ambos comparecem e o representante volta a ser acompanhante.
+                    </p>
                 </UiCard>
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
-
-<style scoped>
-.conflict-choice {
-    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
-}
-.conflict-choice:hover {
-    border-color: var(--color-institutional-400, #5e97c4);
-    background-color: #e2edf7;
-    transform: translateY(-1px);
-}
-@media (prefers-reduced-motion: reduce) {
-    .conflict-choice { transition: none; }
-    .conflict-choice:hover { transform: none; }
-}
-</style>
