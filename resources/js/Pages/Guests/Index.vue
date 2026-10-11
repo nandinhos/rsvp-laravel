@@ -6,6 +6,7 @@ import UiButton from '@/Components/ui/UiButton.vue';
 import UiBadge from '@/Components/ui/UiBadge.vue';
 import UiCard from '@/Components/ui/UiCard.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
+import AlertBanner from '@/Components/ui/AlertBanner.vue';
 
 const props = defineProps({
     event: Object,
@@ -98,6 +99,11 @@ const inputClass =
     <Head :title="`Convidados · ${event.name}`" />
 
     <AuthenticatedLayout>
+        <template #banner v-if="event.status === 'encerrado'">
+            <AlertBanner full variant="warning">
+                <strong>Atenção:</strong> este evento foi <strong>ENCERRADO</strong>. Inclusões, confirmações e credenciamentos estão bloqueados (CA-14).
+            </AlertBanner>
+        </template>
         <template #header>
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <h2 class="text-xl font-semibold leading-tight text-institutional-900">

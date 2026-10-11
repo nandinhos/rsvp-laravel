@@ -179,6 +179,9 @@ const showingNavigationDropdown = ref(false);
                 </div>
             </nav>
 
+            <!-- Faixa de alerta global (ex.: evento encerrado — CA-14) -->
+            <slot name="banner" />
+
             <!-- Page Heading -->
             <header
                 class="bg-white shadow"

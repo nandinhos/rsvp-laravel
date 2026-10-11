@@ -4,6 +4,7 @@ import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import StatCard from '@/Components/ui/StatCard.vue';
 import UiButton from '@/Components/ui/UiButton.vue';
+import AlertBanner from '@/Components/ui/AlertBanner.vue';
 
 const props = defineProps({
     event: Object,
@@ -32,6 +33,11 @@ function rate(value) {
     <Head :title="`Painel · ${event.name}`" />
 
     <AuthenticatedLayout>
+        <template #banner v-if="event.status === 'encerrado'">
+            <AlertBanner full variant="warning">
+                <strong>Atenção:</strong> este evento foi <strong>ENCERRADO</strong>. Inclusões, confirmações e credenciamentos estão bloqueados (CA-14).
+            </AlertBanner>
+        </template>
         <template #header>
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <h2 class="text-xl font-semibold leading-tight text-institutional-900">
@@ -75,14 +81,24 @@ function rate(value) {
         <div class="py-6">
             <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
                 <!-- Aviso de conflitos pendentes (CA-06) -->
-                <div
+                <AlertBanner
                     v-if="metrics.has_pending_conflicts"
-                    role="alert"
-                    class="rounded-xl border-l-4 border-amber-500 bg-amber-50 p-4 text-sm text-amber-800"
+                    variant="warning"
+                    title="Conflito de representação pendente (CA-06)"
                 >
-                    Há conflitos de vínculo (titular e representante confirmados) pendentes de resolução.
-                    Os quantitativos definitivos dependem dessa resolução.
-                </div>
+                    Titular e representante confirmados simultaneamente. Os quantitativos definitivos
+                    dependem da resolução explícita desta pendência.
+                    <template #action v-if="can.operate">
+                        <UiButton
+                            :href="route('conflicts.index', event.id)"
+                            variant="primary"
+                            size="sm"
+                            class="!bg-amber-600 hover:!bg-amber-700"
+                        >
+                            Resolver agora
+                        </UiButton>
+                    </template>
+                </AlertBanner>
 
                 <!-- Indicadores principais -->
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
