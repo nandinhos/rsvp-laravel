@@ -6,6 +6,7 @@ defineProps({
     variant: { type: String, default: 'primary' },
     size: { type: String, default: 'md' }, // sm | md
     href: { type: String, default: null }, // se presente, renderiza <Link>
+    external: { type: Boolean, default: false }, // com href, usa <a> nativo (downloads/navegação fora do Inertia)
     type: { type: String, default: 'button' },
 });
 
@@ -28,7 +29,10 @@ const sizes = {
 </script>
 
 <template>
-    <Link v-if="href" :href="href" :class="[base, variants[variant], sizes[size]]">
+    <a v-if="href && external" :href="href" :class="[base, variants[variant], sizes[size]]">
+        <slot />
+    </a>
+    <Link v-else-if="href" :href="href" :class="[base, variants[variant], sizes[size]]">
         <slot />
     </Link>
     <button v-else :type="type" :class="[base, variants[variant], sizes[size]]">
