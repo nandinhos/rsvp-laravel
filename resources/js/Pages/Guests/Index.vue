@@ -7,6 +7,7 @@ import UiBadge from '@/Components/ui/UiBadge.vue';
 import UiCard from '@/Components/ui/UiCard.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import AlertBanner from '@/Components/ui/AlertBanner.vue';
+import { useToast } from '@/composables/useToast';
 
 const props = defineProps({
     event: Object,
@@ -73,12 +74,57 @@ function exportUrl(name) {
 
 watch(form, () => applyFilters());
 
-function act(name, guestId) {
+const toast = useToast();
+
+/** Dispara a rota inversa (undo) sem recarregar o estado local. */
+function undoAction(name, guestId) {
     router.post(
         route(name, [props.event.id, guestId]),
         {},
         { preserveScroll: true, preserveState: true },
     );
+}
+
+/** Ação reversível: executa e oferece desfazer imediato via toast. */
+function actWithUndo(name, guest, opts) {
+    router.post(
+        route(name, [props.event.id, guest.id]),
+        {},
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                toast.success(opts.title(guest), opts.message ?? '', {
+                    undoLabel: opts.undoLabel,
+                    onUndo: () => undoAction(opts.undoRoute, guest.id),
+                });
+            },
+        },
+    );
+}
+
+function confirmGuest(guest) {
+    actWithUndo('guests.confirm', guest, {
+        title: (g) => `Participação confirmada: #${g.number} ${g.full_name}`,
+        undoLabel: 'Desfazer confirmação',
+        undoRoute: 'guests.undo-rsvp',
+    });
+}
+
+function checkInGuest(guest) {
+    actWithUndo('guests.check-in', guest, {
+        title: (g) => `Credenciamento registrado: #${g.number} ${g.full_name}`,
+        undoLabel: 'Desfazer check-in',
+        undoRoute: 'guests.revert-check-in',
+    });
+}
+
+function declineGuest(guest) {
+    actWithUndo('guests.decline', guest, {
+        title: (g) => `Ausência registrada: #${g.number} ${g.full_name}`,
+        undoLabel: 'Desfazer recusa',
+        undoRoute: 'guests.undo-rsvp',
+    });
 }
 
 const rsvpVariant = {
@@ -201,9 +247,9 @@ const inputClass =
                                 <td class="px-4 py-3"><UiBadge :variant="attendanceVariant[g.attendance_status]">{{ g.attendance_label }}</UiBadge></td>
                                 <td class="px-4 py-3 text-right">
                                     <div v-if="can.operate" class="inline-flex gap-2">
-                                        <UiButton v-if="g.rsvp_status !== 'confirmado'" size="sm" variant="success" @click="act('guests.confirm', g.id)">Confirmar</UiButton>
-                                        <UiButton v-if="g.rsvp_status !== 'nao_participara'" size="sm" variant="danger" @click="act('guests.decline', g.id)">Recusar</UiButton>
-                                        <UiButton v-if="g.attendance_status !== 'presente'" size="sm" variant="primary" @click="act('guests.check-in', g.id)">Check-in</UiButton>
+                                        <UiButton v-if="g.rsvp_status !== 'confirmado'" size="sm" variant="success" @click="confirmGuest(g)">Confirmar</UiButton>
+                                        <UiButton v-if="g.rsvp_status !== 'nao_participara'" size="sm" variant="danger" @click="declineGuest(g)">Recusar</UiButton>
+                                        <UiButton v-if="g.attendance_status !== 'presente'" size="sm" variant="primary" @click="checkInGuest(g)">Check-in</UiButton>
                                     </div>
                                 </td>
                             </tr>
@@ -228,8 +274,8 @@ const inputClass =
                             <UiBadge :variant="attendanceVariant[g.attendance_status]">{{ g.attendance_label }}</UiBadge>
                         </div>
                         <div v-if="can.operate" class="mt-3 flex gap-2">
-                            <UiButton v-if="g.rsvp_status !== 'confirmado'" variant="success" class="flex-1" @click="act('guests.confirm', g.id)">Confirmar</UiButton>
-                            <UiButton v-if="g.attendance_status !== 'presente'" variant="primary" class="flex-1" @click="act('guests.check-in', g.id)">Check-in</UiButton>
+                            <UiButton v-if="g.rsvp_status !== 'confirmado'" variant="success" class="flex-1" @click="confirmGuest(g)">Confirmar</UiButton>
+                            <UiButton v-if="g.attendance_status !== 'presente'" variant="primary" class="flex-1" @click="checkInGuest(g)">Check-in</UiButton>
                         </div>
                     </UiCard>
                 </div>

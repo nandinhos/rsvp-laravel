@@ -167,6 +167,34 @@ class GuestController extends Controller
         return back()->with('success', 'Credenciamento registrado.');
     }
 
+    /** Reverte o credenciamento (desfazer imediato, PRD §2.6). */
+    public function revertCheckIn(Request $request, Event $event, Guest $guest): RedirectResponse
+    {
+        Gate::authorize('operate', $event);
+        $this->guardOwnership($event, $guest);
+        $this->guardOpen($event);
+
+        $this->checkIn->undo($guest);
+
+        $this->audit->log('guest.check_in_reverted', $request->user(), $event, $guest);
+
+        return back()->with('success', 'Credenciamento desfeito.');
+    }
+
+    /** Retorna o RSVP para pendente (desfazer confirmação/recusa). */
+    public function undoRsvp(Request $request, Event $event, Guest $guest): RedirectResponse
+    {
+        Gate::authorize('operate', $event);
+        $this->guardOwnership($event, $guest);
+        $this->guardOpen($event);
+
+        $this->rsvp->reset($guest);
+
+        $this->audit->log('guest.rsvp_reset', $request->user(), $event, $guest);
+
+        return back()->with('success', 'Confirmação desfeita.');
+    }
+
     /**
      * Garante que o convidado pertence ao evento da rota (CA-01):
      * impede acesso cruzado via manipulação de IDs na URL.

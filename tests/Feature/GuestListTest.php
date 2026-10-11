@@ -195,3 +195,73 @@ it('rejeita cadastro com categoria de outro evento (CA-02)', function () {
 
     expect($event->guests()->count())->toBe(0);
 });
+
+/**
+ * Reversões (desfazer imediato) — padrão de undo.
+ */
+it('operador desfaz o credenciamento (revert-check-in)', function () {
+    $event = Event::factory()->create();
+    $operador = member($event, EventRole::Operador);
+    $guest = Guest::factory()->inEvent($event)->create();
+
+    app(CheckInService::class)->checkIn($guest, $operador);
+    expect($guest->fresh()->attendance_status)->toBe(AttendanceStatus::Presente);
+
+    $this->actingAs($operador)
+        ->post(route('guests.revert-check-in', [$event->id, $guest->id]))
+        ->assertRedirect();
+
+    $guest->refresh();
+    expect($guest->attendance_status)->toBe(AttendanceStatus::Aguardando);
+    expect($guest->checked_in_at)->toBeNull();
+    expect($guest->checked_in_by)->toBeNull();
+});
+
+it('operador desfaz a confirmação de RSVP (undo-rsvp)', function () {
+    $event = Event::factory()->create();
+    $operador = member($event, EventRole::Operador);
+    $guest = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::Confirmado]);
+
+    $this->actingAs($operador)
+        ->post(route('guests.undo-rsvp', [$event->id, $guest->id]))
+        ->assertRedirect();
+
+    expect($guest->fresh()->rsvp_status)->toBe(RsvpStatus::Pendente);
+});
+
+it('leitor não pode desfazer credenciamento nem RSVP', function () {
+    $event = Event::factory()->create();
+    $leitor = member($event, EventRole::Leitor);
+    $guest = Guest::factory()->inEvent($event)->create();
+
+    $this->actingAs($leitor)
+        ->post(route('guests.revert-check-in', [$event->id, $guest->id]))
+        ->assertForbidden();
+
+    $this->actingAs($leitor)
+        ->post(route('guests.undo-rsvp', [$event->id, $guest->id]))
+        ->assertForbidden();
+});
+
+it('impede desfazer em convidado de outro evento via URL cruzada (CA-01)', function () {
+    $eventA = Event::factory()->create();
+    $eventB = Event::factory()->create();
+    $operador = member($eventA, EventRole::Operador);
+    $guestB = Guest::factory()->inEvent($eventB)->create();
+
+    $this->actingAs($operador)
+        ->post(route('guests.revert-check-in', [$eventA->id, $guestB->id]))
+        ->assertNotFound();
+});
+
+it('bloqueia reversões em evento encerrado (CA-14)', function () {
+    $event = Event::factory()->closed()->create();
+    $operador = member($event, EventRole::Operador);
+    $guest = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::Confirmado]);
+
+    $this->actingAs($operador)
+        ->post(route('guests.undo-rsvp', [$event->id, $guest->id]))
+        ->assertForbidden();
+
+    expect($guest->fresh()->rsvp_status)->toBe(RsvpStatus::Confirmado);
+});

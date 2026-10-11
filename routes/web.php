@@ -50,6 +50,10 @@ Route::middleware('auth')->group(function () {
         Route::post('guests/{guest}/decline', [GuestController::class, 'decline'])->name('guests.decline');
         Route::post('guests/{guest}/check-in', [GuestController::class, 'checkIn'])->name('guests.check-in');
 
+        // Reversões (desfazer imediato — padrão de undo).
+        Route::post('guests/{guest}/revert-check-in', [GuestController::class, 'revertCheckIn'])->name('guests.revert-check-in');
+        Route::post('guests/{guest}/undo-rsvp', [GuestController::class, 'undoRsvp'])->name('guests.undo-rsvp');
+
         // Importação (PRD §6).
         Route::get('import', [GuestImportController::class, 'create'])->name('guests.import.create');
         Route::post('import/preview', [GuestImportController::class, 'preview'])->name('guests.import.preview');
