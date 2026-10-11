@@ -302,19 +302,22 @@ it('renderiza a estação de credenciamento com contadores ao vivo', function ()
         );
 });
 
-it('a estação prioriza convidados aguardando na ordenação', function () {
+it('a estação mantém ordem estável por número (credenciar não reordena)', function () {
     $event = Event::factory()->create();
     $operador = member($event, EventRole::Operador);
 
-    $presente = Guest::factory()->inEvent($event)->create(['full_name' => 'Primeiro numero']);
-    app(CheckInService::class)->checkIn($presente, $operador);
+    // #1 é credenciado (presente); #2 permanece aguardando.
+    $primeiro = Guest::factory()->inEvent($event)->create(['full_name' => 'Primeiro numero']);
+    app(CheckInService::class)->checkIn($primeiro, $operador);
     Guest::factory()->inEvent($event)->create(['full_name' => 'Segundo numero']);
 
-    // O presente tem número menor, mas deve aparecer DEPOIS do que aguarda.
+    // A ordem deve seguir a numeração do evento, não o estado de presença:
+    // o presente #1 continua antes do que aguarda #2.
     $this->actingAs($operador)
         ->get(route('guests.check-in-station', $event->id))
         ->assertInertia(fn ($page) => $page
-            ->where('guests.0.attendance_status', 'aguardando')
-            ->where('guests.1.attendance_status', 'presente')
+            ->where('guests.0.number', $primeiro->number)
+            ->where('guests.0.attendance_status', 'presente')
+            ->where('guests.1.attendance_status', 'aguardando')
         );
 });

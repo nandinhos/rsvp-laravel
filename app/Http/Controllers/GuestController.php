@@ -72,8 +72,10 @@ class GuestController extends Controller
     }
 
     /**
-     * Estação de credenciamento (portaria): busca unificada, ordenação que
-     * prioriza quem aguarda, contadores ao vivo e credenciamento rápido (CA-09, CA-12).
+     * Estação de credenciamento (portaria): busca unificada, contadores ao
+     * vivo e credenciamento rápido (CA-09, CA-12). A ordenação é estável pela
+     * numeração do evento — credenciar NÃO reordena a lista, preservando a
+     * posição visual do convidado para a operação na portaria.
      */
     public function checkInStation(Request $request, Event $event): Response
     {
@@ -82,10 +84,6 @@ class GuestController extends Controller
         $search = (string) $request->query('search', '');
 
         $guests = $this->listQuery->build($event, ['search' => $search])
-            ->reorder()
-            // Prioriza aguardando antes de presente; depois pela numeração.
-            ->orderByRaw("CASE attendance_status WHEN 'aguardando' THEN 0 ELSE 1 END")
-            ->orderBy('number')
             ->limit(100)
             ->get()
             ->map(fn (Guest $g) => [
