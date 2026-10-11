@@ -24,12 +24,6 @@ const statusLabel = computed(() => {
     return 'Rascunho';
 });
 
-const statusColor = computed(() => ({
-    ativo: 'text-emerald-700',
-    encerrado: 'text-institutional-text/50',
-    rascunho: 'text-amber-700',
-}[props.event.status] ?? 'text-institutional-text/60'));
-
 const formattedDate = computed(() => {
     if (!props.event.starts_at) return null;
     try {
@@ -82,51 +76,51 @@ const attendancePct = computed(() => Math.min(100, props.metrics.attendance_rate
 
         <PageContainer>
             <div class="space-y-6">
-                <!-- Banner do evento -->
-                <UiCard padding="p-6">
+                <!-- Banner do evento (card institucional) -->
+                <section class="overflow-hidden rounded-2xl bg-gradient-to-br from-institutional-900 to-institutional-700 px-6 py-5 shadow-lg shadow-institutional-900/20">
                     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <p class="flex items-center gap-2 text-xs font-medium text-institutional-600">
+                        <div class="min-w-0">
+                            <p class="flex items-center gap-2 text-xs font-medium text-white/60">
                                 <span>Evento</span>
-                                <span class="text-institutional-text/30">·</span>
-                                <span class="font-semibold" :class="statusColor">{{ statusLabel }}</span>
+                                <span class="text-white/30">·</span>
+                                <span class="font-semibold text-white/90">{{ statusLabel }}</span>
                             </p>
-                            <h1 class="mt-1 text-2xl font-bold tracking-tight text-institutional-900">{{ event.name }}</h1>
-                            <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-institutional-text/60">
+                            <h1 class="mt-1 text-2xl font-bold tracking-tight text-white sm:text-3xl">{{ event.name }}</h1>
+                            <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/70">
                                 <span v-if="formattedDate" class="flex items-center gap-1.5">
-                                    <svg class="h-4 w-4 text-institutional-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /></svg>
+                                    <svg class="h-4 w-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /></svg>
                                     {{ formattedDate }}
                                 </span>
-                                <span v-if="event.location" class="hidden text-institutional-text/20 sm:inline">|</span>
+                                <span v-if="event.location" class="hidden text-white/20 sm:inline">|</span>
                                 <span v-if="event.location" class="flex items-center gap-1.5">
-                                    <svg class="h-4 w-4 text-institutional-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                                    <svg class="h-4 w-4 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
                                     {{ event.location }}
                                 </span>
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <UiButton v-if="can.operate" :href="route('guests.check-in-station', event.id)" variant="primary">Estação Portaria</UiButton>
-                            <UiButton :href="route('guests.index', event.id)" variant="secondary">Lista de convidados</UiButton>
-                            <UiButton v-if="can.administer" :href="route('events.audit', event.id)" variant="neutral">Auditoria</UiButton>
-                            <UiButton
+                            <a v-if="can.operate" :href="route('guests.check-in-station', event.id)" class="hero-btn hero-btn--solid">Estação Portaria</a>
+                            <a :href="route('guests.index', event.id)" class="hero-btn hero-btn--ghost">Lista de convidados</a>
+                            <a v-if="can.administer" :href="route('events.audit', event.id)" class="hero-btn hero-btn--ghost">Auditoria</a>
+                            <button
                                 v-if="can.administer && event.status !== 'encerrado'"
-                                variant="secondary"
-                                class="!border-rose-300 !text-rose-700 hover:!bg-rose-50"
+                                type="button"
+                                class="hero-btn hero-btn--ghost"
                                 @click="action('events.close')"
                             >
                                 Encerrar
-                            </UiButton>
-                            <UiButton
+                            </button>
+                            <button
                                 v-if="can.administer && event.status === 'encerrado'"
-                                variant="secondary"
-                                class="!border-emerald-300 !text-emerald-700 hover:!bg-emerald-50"
+                                type="button"
+                                class="hero-btn hero-btn--ghost"
                                 @click="action('events.reopen')"
                             >
                                 Reabrir
-                            </UiButton>
+                            </button>
                         </div>
                     </div>
-                </UiCard>
+                </section>
 
                 <!-- Aviso de conflitos pendentes (CA-06) -->
                 <AlertBanner
@@ -255,3 +249,37 @@ const attendancePct = computed(() => Math.min(100, props.metrics.attendance_rate
         </PageContainer>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+.hero-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.hero-btn--solid {
+    background-color: #fff;
+    color: var(--color-institutional-900, #0b2a4a);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.hero-btn--solid:hover {
+    background-color: #eef4fa;
+    transform: translateY(-1px);
+}
+.hero-btn--ghost {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+}
+.hero-btn--ghost:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+    .hero-btn:hover { transform: none; }
+}
+</style>
