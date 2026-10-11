@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageHero from '@/Components/ui/PageHero.vue';
@@ -7,17 +8,51 @@ import UiCard from '@/Components/ui/UiCard.vue';
 import UiBadge from '@/Components/ui/UiBadge.vue';
 import UiButton from '@/Components/ui/UiButton.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
+import ConfirmDialog from '@/Components/ui/ConfirmDialog.vue';
 
 const props = defineProps({
     event: Object,
     conflicts: Array,
 });
 
-function resolve(relationshipId, keep) {
+const pending = ref(null); // { conflict, keep, title, message, confirmLabel, confirmVariant }
+
+/** Monta a confirmação descrevendo o efeito exato sobre cada pessoa. */
+function ask(conflict, keep) {
+    const host = `#${conflict.host.number} ${conflict.host.name}`;
+    const rep = `#${conflict.representative.number} ${conflict.representative.name}`;
+
+    const specs = {
+        host: {
+            title: 'Manter o titular?',
+            message: `${host} permanece confirmado. ${rep} será marcado como "não participará". Ninguém é excluído — é possível reverter depois.`,
+            confirmLabel: 'Manter titular',
+            confirmVariant: 'primary',
+        },
+        representative: {
+            title: 'Manter o representante?',
+            message: `${rep} permanece confirmado. ${host} será marcado como "não participará". Ninguém é excluído — é possível reverter depois.`,
+            confirmLabel: 'Manter representante',
+            confirmVariant: 'primary',
+        },
+        both: {
+            title: 'Manter ambos?',
+            message: `${rep} volta a ser acompanhante e os dois comparecem. Use quando a representação foi um erro de cadastro.`,
+            confirmLabel: 'Manter ambos',
+            confirmVariant: 'success',
+        },
+    };
+
+    pending.value = { conflictId: conflict.id, keep, ...specs[keep] };
+}
+
+function confirmResolve() {
+    if (!pending.value) return;
+    const { conflictId, keep } = pending.value;
     router.post(
-        route('conflicts.resolve', [props.event.id, relationshipId]),
+        route('conflicts.resolve', [props.event.id, conflictId]),
         { keep },
-        { preserveScroll: true },
+        { preserveScroll: true, onFinish: () => { pending.value = null; } },
     );
 }
 </script>
@@ -91,13 +126,13 @@ function resolve(relationshipId, keep) {
                                     <!-- Coluna Ação: botões específicos do caso -->
                                     <td class="px-4 py-4">
                                         <div class="flex flex-col items-end gap-1.5">
-                                            <UiButton size="sm" variant="primary" class="w-full justify-center sm:w-auto" @click="resolve(c.id, 'host')" :title="`${c.representative.name} será marcado como não participará`">
+                                            <UiButton size="sm" variant="primary" class="w-full justify-center sm:w-auto" @click="ask(c, 'host')" :title="`${c.representative.name} será marcado como não participará`">
                                                 Manter titular
                                             </UiButton>
-                                            <UiButton size="sm" variant="secondary" class="w-full justify-center sm:w-auto" @click="resolve(c.id, 'representative')" :title="`${c.host.name} será marcado como não participará`">
+                                            <UiButton size="sm" variant="secondary" class="w-full justify-center sm:w-auto" @click="ask(c, 'representative')" :title="`${c.host.name} será marcado como não participará`">
                                                 Manter representante
                                             </UiButton>
-                                            <UiButton size="sm" variant="success" class="w-full justify-center sm:w-auto" @click="resolve(c.id, 'both')" :title="`${c.representative.name} volta a acompanhante; ambos comparecem`">
+                                            <UiButton size="sm" variant="success" class="w-full justify-center sm:w-auto" @click="ask(c, 'both')" :title="`${c.representative.name} volta a acompanhante; ambos comparecem`">
                                                 Manter ambos
                                             </UiButton>
                                         </div>
@@ -114,5 +149,15 @@ function resolve(relationshipId, keep) {
                 </p>
             </template>
         </PageContainer>
+
+        <ConfirmDialog
+            :show="pending !== null"
+            :title="pending?.title ?? ''"
+            :message="pending?.message"
+            :confirm-label="pending?.confirmLabel"
+            :confirm-variant="pending?.confirmVariant"
+            @confirm="confirmResolve"
+            @close="pending = null"
+        />
     </AuthenticatedLayout>
 </template>
