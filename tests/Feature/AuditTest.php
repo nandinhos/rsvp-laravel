@@ -156,6 +156,43 @@ it('resolve conflito rebaixando o representante a acompanhante, mantendo ambos (
     expect($rep->fresh()->participation_role)->toBe(App\Enums\ParticipationRole::Acompanhante);
 });
 
+it('resolve conflitos de forma individual sem afetar outros pares (CA-06)', function () {
+    $event = Event::factory()->create();
+    $operador = auditMember($event, EventRole::Operador);
+    $rsvp = new RsvpService;
+    $links = new GuestRelationshipService;
+
+    // Dois conflitos independentes: (hostA, repA) e (hostB, repB).
+    $hostA = Guest::factory()->inEvent($event)->create();
+    $repA = Guest::factory()->inEvent($event)->create();
+    $links->attachCompanion($repA, $hostA);
+    $rsvp->confirm($repA);
+    $rsvp->confirm($hostA);
+
+    $hostB = Guest::factory()->inEvent($event)->create();
+    $repB = Guest::factory()->inEvent($event)->create();
+    $links->attachCompanion($repB, $hostB);
+    $rsvp->confirm($repB);
+    $rsvp->confirm($hostB);
+
+    $linkA = $repA->hostRelationship()->first();
+    $linkB = $repB->hostRelationship()->first();
+    expect($linkA->is_conflict)->toBeTrue();
+    expect($linkB->is_conflict)->toBeTrue();
+
+    // Resolve APENAS o conflito A (mantendo o titular A).
+    $this->actingAs($operador)
+        ->post(route('conflicts.resolve', [$event->id, $linkA->id]), ['keep' => 'host'])
+        ->assertRedirect();
+
+    // Conflito A resolvido; conflito B permanece intacto e pendente.
+    expect($linkA->fresh()->is_conflict)->toBeFalse();
+    expect($linkB->fresh()->is_conflict)->toBeTrue();
+    expect($linkB->fresh()->resolved_at)->toBeNull();
+    expect($hostB->fresh()->rsvp_status)->toBe(RsvpStatus::Confirmado);
+    expect($repB->fresh()->rsvp_status)->toBe(RsvpStatus::Confirmado);
+});
+
 /**
  * CA-10 — página de auditoria protegida (somente administrador).
  */
