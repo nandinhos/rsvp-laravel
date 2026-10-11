@@ -58,7 +58,7 @@ const tabClass = (active) =>
     <AuthenticatedLayout>
         <PageHero :title="`Importar convidados — ${event.name}`" subtitle="Pré-visualize erros e avisos antes de persistir (CA-08).">
             <template #actions>
-                <UiButton :href="route('guests.index', event.id)" variant="secondary" size="md">Voltar à lista</UiButton>
+                <UiButton :href="route('guests.index', event.id)" variant="onLightGhost" size="md">Voltar à lista</UiButton>
             </template>
         </PageHero>
 

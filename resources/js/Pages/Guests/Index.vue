@@ -155,13 +155,13 @@ const inputClass =
             </AlertBanner>
         </template>
 
-        <PageHero :title="`${event.name} — Convidados`">
+        <PageHero :title="`${event.name} — Convidados`" subtitle="Cadastro, classificação e confirmação de convidados do evento.">
             <template #actions>
-                <UiButton v-if="can.operate" :href="route('guests.check-in-station', event.id)" variant="primary">Credenciamento</UiButton>
-                <UiButton v-if="can.export" external :href="exportUrl('guests.export.excel')" variant="secondary" size="md">Excel</UiButton>
-                <UiButton v-if="can.export" external :href="exportUrl('guests.export.pdf')" variant="secondary" size="md">PDF</UiButton>
-                <UiButton v-if="can.manageGuests" :href="route('guests.import.create', event.id)" variant="primary">Importar</UiButton>
-                <UiButton v-if="can.manageGuests" variant="success" @click="showCreate = !showCreate">Novo convidado</UiButton>
+                <UiButton v-if="can.operate" :href="route('guests.check-in-station', event.id)" variant="onLight" size="md">Credenciamento</UiButton>
+                <UiButton v-if="can.export" external :href="exportUrl('guests.export.excel')" variant="onLightGhost" size="md">Excel</UiButton>
+                <UiButton v-if="can.export" external :href="exportUrl('guests.export.pdf')" variant="onLightGhost" size="md">PDF</UiButton>
+                <UiButton v-if="can.manageGuests" :href="route('guests.import.create', event.id)" variant="onLightGhost" size="md">Importar</UiButton>
+                <UiButton v-if="can.manageGuests" variant="success" size="md" @click="showCreate = !showCreate">Novo convidado</UiButton>
             </template>
         </PageHero>
 

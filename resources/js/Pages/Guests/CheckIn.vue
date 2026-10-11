@@ -98,7 +98,7 @@ function undoLastCheckIn() {
 
         <PageHero :title="`${event.name} — Credenciamento`" subtitle="Estação de portaria — valide a presença dos convidados confirmados.">
             <template #actions>
-                <UiButton :href="route('guests.index', event.id)" variant="secondary" size="md">Lista completa</UiButton>
+                <UiButton :href="route('guests.index', event.id)" variant="onLightGhost" size="md">Lista completa</UiButton>
             </template>
         </PageHero>
 

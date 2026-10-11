@@ -30,7 +30,7 @@ const actionLabel = {
     <AuthenticatedLayout>
         <PageHero :title="`Auditoria — ${event.name}`" subtitle="Registro append-only de operações críticas (CA-10).">
             <template #actions>
-                <UiButton :href="route('events.dashboard', event.id)" variant="secondary" size="md">Voltar ao painel</UiButton>
+                <UiButton :href="route('events.dashboard', event.id)" variant="onLightGhost" size="md">Voltar ao painel</UiButton>
             </template>
         </PageHero>
 
