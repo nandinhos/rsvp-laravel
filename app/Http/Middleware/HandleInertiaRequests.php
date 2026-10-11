@@ -44,6 +44,13 @@ class HandleInertiaRequests extends Middleware
                         'status' => $event->status->value,
                     ])
                 : [],
+            'activeEvent' => function () use ($request) {
+                $event = $request->route('event');
+
+                return $event instanceof \App\Models\Event
+                    ? ['id' => $event->id, 'name' => $event->name, 'status' => $event->status->value]
+                    : null;
+            },
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'importPreview' => fn () => $request->session()->get('importPreview'),
