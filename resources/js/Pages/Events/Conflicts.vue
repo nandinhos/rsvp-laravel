@@ -15,36 +15,51 @@ const props = defineProps({
     conflicts: Array,
 });
 
-const pending = ref(null); // { conflict, keep, title, message, confirmLabel, confirmVariant }
+const pending = ref(null);
 
-/** Monta a confirmação descrevendo o efeito exato sobre cada pessoa. */
+/** Monta a confirmação com efeito estruturado (quem fica / quem muda). */
 function ask(conflict, keep) {
-    const host = `#${conflict.host.number} ${conflict.host.name}`;
-    const rep = `#${conflict.representative.number} ${conflict.representative.name}`;
+    const host = { label: 'Titular', text: `#${conflict.host.number} ${conflict.host.name}` };
+    const rep = { label: 'Representante', text: `#${conflict.representative.number} ${conflict.representative.name}` };
 
     const specs = {
         host: {
             title: 'Manter o titular?',
-            message: `${host} permanece confirmado. ${rep} será marcado como "não participará". Ninguém é excluído — é possível reverter depois.`,
             confirmLabel: 'Manter titular',
             confirmVariant: 'primary',
+            effects: [
+                { person: host, outcome: 'Permanece confirmado', tone: 'keep' },
+                { person: rep, outcome: 'Marcado como “não participará”', tone: 'drop' },
+            ],
         },
         representative: {
             title: 'Manter o representante?',
-            message: `${rep} permanece confirmado. ${host} será marcado como "não participará". Ninguém é excluído — é possível reverter depois.`,
             confirmLabel: 'Manter representante',
             confirmVariant: 'primary',
+            effects: [
+                { person: rep, outcome: 'Permanece confirmado', tone: 'keep' },
+                { person: host, outcome: 'Marcado como “não participará”', tone: 'drop' },
+            ],
         },
         both: {
             title: 'Manter ambos?',
-            message: `${rep} volta a ser acompanhante e os dois comparecem. Use quando a representação foi um erro de cadastro.`,
             confirmLabel: 'Manter ambos',
             confirmVariant: 'success',
+            effects: [
+                { person: host, outcome: 'Permanece confirmado (titular)', tone: 'keep' },
+                { person: rep, outcome: 'Rebaixado a acompanhante — também comparece', tone: 'demote' },
+            ],
         },
     };
 
     pending.value = { conflictId: conflict.id, keep, ...specs[keep] };
 }
+
+const toneBadge = {
+    keep: 'bg-emerald-100 text-emerald-800',
+    drop: 'bg-rose-100 text-rose-800',
+    demote: 'bg-amber-100 text-amber-800',
+};
 
 function confirmResolve() {
     if (!pending.value) return;
@@ -153,11 +168,29 @@ function confirmResolve() {
         <ConfirmDialog
             :show="pending !== null"
             :title="pending?.title ?? ''"
-            :message="pending?.message"
             :confirm-label="pending?.confirmLabel"
             :confirm-variant="pending?.confirmVariant"
             @confirm="confirmResolve"
             @close="pending = null"
-        />
+        >
+            <ul v-if="pending" class="mt-3 space-y-2">
+                <li
+                    v-for="(e, idx) in pending.effects"
+                    :key="idx"
+                    class="flex items-center justify-between gap-3 rounded-lg border border-institutional-900/8 bg-institutional-50/50 px-3 py-2"
+                >
+                    <span class="min-w-0">
+                        <span class="block text-[10px] font-semibold uppercase tracking-wide text-institutional-text/40">{{ e.person.label }}</span>
+                        <span class="block truncate text-sm font-medium text-institutional-900">{{ e.person.text }}</span>
+                    </span>
+                    <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold" :class="toneBadge[e.tone]">
+                        {{ e.outcome }}
+                    </span>
+                </li>
+            </ul>
+            <p class="mt-3 text-xs text-institutional-text/50">
+                Ninguém é excluído — a decisão é auditada e pode ser revertida depois.
+            </p>
+        </ConfirmDialog>
     </AuthenticatedLayout>
 </template>
