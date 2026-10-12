@@ -160,6 +160,26 @@ it('busca por número encontra o convidado exato', function () {
         );
 });
 
+it('busca por nome é case-insensitive (minúsculas encontram maiúsculas)', function () {
+    $event = Event::factory()->create();
+    $gestor = member($event, EventRole::Gestor);
+    Guest::factory()->inEvent($event)->create(['full_name' => 'Ana Lúcia SILVA']);
+    Guest::factory()->inEvent($event)->create(['full_name' => 'Bruno Costa']);
+
+    // Busca em minúsculas deve achar o nome com maiúsculas.
+    $this->actingAs($gestor)
+        ->get(route('guests.index', [$event->id, 'search' => 'silva']))
+        ->assertInertia(fn ($page) => $page
+            ->has('guests.data', 1)
+            ->where('guests.data.0.full_name', 'Ana Lúcia SILVA')
+        );
+
+    // E termo em maiúsculas deve achar normalmente também.
+    $this->actingAs($gestor)
+        ->get(route('guests.index', [$event->id, 'search' => 'ANA']))
+        ->assertInertia(fn ($page) => $page->has('guests.data', 1));
+});
+
 /**
  * Criação com numeração automática e categoria do evento (CA-02, CA-13).
  */
