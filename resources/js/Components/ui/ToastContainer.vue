@@ -17,7 +17,7 @@ function runUndo(toast) {
 
 <template>
     <div
-        class="pointer-events-none fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2"
+        class="pointer-events-none fixed right-4 top-4 z-50 flex w-full max-w-sm flex-col gap-2"
         aria-live="polite"
         aria-atomic="false"
     >
@@ -70,7 +70,7 @@ function runUndo(toast) {
 }
 .toast-enter-from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(-12px);
 }
 .toast-leave-to {
     opacity: 0;
