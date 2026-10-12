@@ -352,8 +352,9 @@ it('serviço de check-in rejeita convidado não confirmado', function () {
 });
 
 /**
- * Reconsideração (mudança de escolha): só quem recusou pode reconsiderar,
- * voltando a pendente — nunca reabre recusa silenciosamente.
+ * Reconsideração (mudança de escolha): toda decisão tomada (confirmado OU
+ * não participará) pode ser reconsiderada, voltando a pendente — nunca
+ * altera a decisão silenciosamente. Pendente não é reconsiderável.
  */
 it('reconsidera uma recusa, voltando o RSVP para pendente', function () {
     $event = Event::factory()->create();
@@ -367,17 +368,28 @@ it('reconsidera uma recusa, voltando o RSVP para pendente', function () {
     expect($guest->fresh()->rsvp_status)->toBe(RsvpStatus::Pendente);
 });
 
-it('rejeita reconsiderar quem não está em "não participará" (422)', function () {
+it('reconsidera uma confirmação, voltando o RSVP para pendente', function () {
     $event = Event::factory()->create();
     $operador = member($event, EventRole::Operador);
-    $confirmado = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::Confirmado]);
+    $guest = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::Confirmado]);
 
     $this->actingAs($operador)
-        ->post(route('guests.reconsider', [$event->id, $confirmado->id]))
+        ->post(route('guests.reconsider', [$event->id, $guest->id]))
+        ->assertRedirect();
+
+    expect($guest->fresh()->rsvp_status)->toBe(RsvpStatus::Pendente);
+});
+
+it('rejeita reconsiderar quem já está pendente (422)', function () {
+    $event = Event::factory()->create();
+    $operador = member($event, EventRole::Operador);
+    $pendente = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::Pendente]);
+
+    $this->actingAs($operador)
+        ->post(route('guests.reconsider', [$event->id, $pendente->id]))
         ->assertStatus(422);
 
-    // Estado preservado.
-    expect($confirmado->fresh()->rsvp_status)->toBe(RsvpStatus::Confirmado);
+    expect($pendente->fresh()->rsvp_status)->toBe(RsvpStatus::Pendente);
 });
 
 it('leitor não pode reconsiderar', function () {

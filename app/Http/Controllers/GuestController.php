@@ -218,9 +218,10 @@ class GuestController extends Controller
     }
 
     /**
-     * Reconsideração (mudança de escolha): um convidado que havia recusado
-     * ("não participará") volta a Pendente, de forma explícita e auditada —
-     * jamais reabre uma recusa silenciosamente.
+     * Reconsideração (mudança de escolha): um convidado com decisão tomada
+     * (confirmado OU não participará) volta a Pendente, de forma explícita e
+     * auditada — jamais altera uma decisão silenciosamente. Fluxo:
+     * Pendente → (Confirmar | Recusar) → Reconsiderar → Pendente.
      */
     public function reconsider(Request $request, Event $event, Guest $guest): RedirectResponse
     {
@@ -228,16 +229,19 @@ class GuestController extends Controller
         $this->guardOwnership($event, $guest);
         $this->guardOpen($event);
 
-        abort_unless($guest->rsvp_status === RsvpStatus::NaoParticipara, 422);
+        // Só faz sentido reconsiderar uma decisão já tomada.
+        abort_if($guest->rsvp_status === RsvpStatus::Pendente, 422);
+
+        $from = $guest->rsvp_status->value;
 
         $this->rsvp->reset($guest); // volta a Pendente
 
         $this->audit->log('guest.rsvp_reconsidered', $request->user(), $event, $guest, [
-            'from' => RsvpStatus::NaoParticipara->value,
+            'from' => $from,
             'to' => RsvpStatus::Pendente->value,
         ]);
 
-        return back()->with('success', 'Recusa reconsiderada: convidado retornou para pendente.');
+        return back()->with('success', 'Decisão reconsiderada: convidado retornou para pendente.');
     }
 
     public function checkIn(Request $request, Event $event, Guest $guest): RedirectResponse
