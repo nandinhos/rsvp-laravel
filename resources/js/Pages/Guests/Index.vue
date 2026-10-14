@@ -152,6 +152,15 @@ const attendanceVariant = {
     presente: 'info',
 };
 
+const stageBadge = {
+    nao_contatado: 'bg-slate-100 text-slate-600',
+    sem_resposta: 'bg-amber-100 text-amber-800',
+    retorno_agendado: 'bg-institutional-100 text-institutional-700',
+    retorno_vencido: 'bg-rose-100 text-rose-800',
+    respondido: 'bg-emerald-100 text-emerald-800',
+    reconfirmado: 'bg-emerald-100 text-emerald-800',
+};
+
 const inputClass =
     'w-full rounded-xl border-institutional-900/15 text-sm shadow-sm transition-colors focus:border-institutional-500 focus:ring-institutional-500';
 </script>
@@ -254,7 +263,15 @@ const inputClass =
                                 <td class="px-4 py-3 font-medium text-institutional-900">{{ g.full_name }}</td>
                                 <td class="px-4 py-3">{{ g.category }}</td>
                                 <td class="px-4 py-3">{{ g.role_label }}</td>
-                                <td class="px-4 py-3"><UiBadge :variant="rsvpVariant[g.rsvp_status]">{{ g.rsvp_label }}</UiBadge></td>
+                                <td class="px-4 py-3">
+                                    <UiBadge :variant="rsvpVariant[g.rsvp_status]">{{ g.rsvp_label }}</UiBadge>
+                                    <div class="mt-1 flex items-center gap-1.5">
+                                        <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="stageBadge[g.contact_stage] ?? 'bg-institutional-100 text-institutional-700'">
+                                            {{ g.contact_stage_label }}
+                                        </span>
+                                        <span v-if="g.contacts_count" class="text-[10px] text-institutional-text/40">{{ g.contacts_count }} contato(s)</span>
+                                    </div>
+                                </td>
                                 <td class="px-4 py-3"><UiBadge :variant="attendanceVariant[g.attendance_status]">{{ g.attendance_label }}</UiBadge></td>
                                 <td class="px-4 py-3 text-right">
                                     <div v-if="can.operate" class="inline-flex gap-2">

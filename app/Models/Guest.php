@@ -74,10 +74,12 @@ class Guest extends Model
 
     /**
      * Histórico de contatos (M1), mais recente primeiro. Append-only.
+     * Desempate por id garante ordem determinística quando dois contatos
+     * compartilham o mesmo created_at (ex.: criados no mesmo segundo).
      */
     public function contacts(): HasMany
     {
-        return $this->hasMany(GuestContact::class)->latest();
+        return $this->hasMany(GuestContact::class)->latest()->latest('id');
     }
 
     public function isConfirmed(): bool
