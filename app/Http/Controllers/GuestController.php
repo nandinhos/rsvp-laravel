@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\AttendanceStatus;
+use App\Enums\ContactChannel;
+use App\Enums\ContactOutcome;
 use App\Enums\ParticipationRole;
 use App\Enums\RsvpStatus;
 use App\Exceptions\GuestDomainException;
@@ -37,6 +39,8 @@ class GuestController extends Controller
         $filters = $request->only(['search', 'category', 'role', 'rsvp', 'attendance']);
 
         $guests = $this->listQuery->build($event, $filters)
+            ->withCount('contacts')
+            ->with(['contacts' => fn ($q) => $q->latest()->limit(1)])
             ->paginate(25)
             ->withQueryString()
             ->through(fn (Guest $g) => [
@@ -50,6 +54,13 @@ class GuestController extends Controller
                 'role_label' => $g->participation_role->label(),
                 'attendance_status' => $g->attendance_status->value,
                 'attendance_label' => $g->attendance_status->label(),
+                'contacts_count' => $g->contacts_count,
+                'last_contact' => optional($g->contacts->first(), fn ($c) => [
+                    'outcome' => $c->outcome->value,
+                    'outcome_label' => $c->outcome->label(),
+                    'channel_label' => $c->channel->label(),
+                    'at' => $c->created_at?->toIso8601String(),
+                ]),
             ]);
 
         return Inertia::render('Guests/Index', [
@@ -312,6 +323,10 @@ class GuestController extends Controller
             'role' => collect(ParticipationRole::cases())
                 ->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])->all(),
             'attendance' => collect(AttendanceStatus::cases())
+                ->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])->all(),
+            'contactChannel' => collect(ContactChannel::cases())
+                ->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])->all(),
+            'contactOutcome' => collect(ContactOutcome::cases())
                 ->map(fn ($c) => ['value' => $c->value, 'label' => $c->label()])->all(),
         ];
     }

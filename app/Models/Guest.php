@@ -72,6 +72,14 @@ class Guest extends Model
         return $this->hasMany(GuestRelationship::class, 'related_guest_id');
     }
 
+    /**
+     * Histórico de contatos (M1), mais recente primeiro. Append-only.
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(GuestContact::class)->latest();
+    }
+
     public function isConfirmed(): bool
     {
         return $this->rsvp_status === RsvpStatus::Confirmado;

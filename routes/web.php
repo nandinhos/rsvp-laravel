@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ConflictController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GuestController;
@@ -55,6 +56,9 @@ Route::middleware('auth')->group(function () {
         // Reversões (desfazer imediato — padrão de undo).
         Route::post('guests/{guest}/revert-check-in', [GuestController::class, 'revertCheckIn'])->name('guests.revert-check-in');
         Route::post('guests/{guest}/undo-rsvp', [GuestController::class, 'undoRsvp'])->name('guests.undo-rsvp');
+
+        // Histórico de contatos / confirmação ativa (M1).
+        Route::post('guests/{guest}/contacts', [ContactController::class, 'store'])->name('guests.contacts.store');
 
         // Importação (PRD §6).
         Route::get('import', [GuestImportController::class, 'create'])->name('guests.import.create');

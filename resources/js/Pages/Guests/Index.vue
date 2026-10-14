@@ -9,6 +9,7 @@ import EmptyState from '@/Components/ui/EmptyState.vue';
 import AlertBanner from '@/Components/ui/AlertBanner.vue';
 import PageHero from '@/Components/ui/PageHero.vue';
 import PageContainer from '@/Components/ui/PageContainer.vue';
+import ContactModal from '@/Components/ui/ContactModal.vue';
 import { useToast } from '@/composables/useToast';
 
 const props = defineProps({
@@ -21,6 +22,16 @@ const props = defineProps({
 });
 
 const showCreate = ref(false);
+
+// Modal de registro de contato (M1 — confirmação ativa).
+const contactGuest = ref(null);
+function openContact(guest) {
+    contactGuest.value = guest;
+}
+function closeContact() {
+    contactGuest.value = null;
+}
+
 const createForm = useForm({
     full_name: '',
     guest_category_id: '',
@@ -247,6 +258,7 @@ const inputClass =
                                 <td class="px-4 py-3"><UiBadge :variant="attendanceVariant[g.attendance_status]">{{ g.attendance_label }}</UiBadge></td>
                                 <td class="px-4 py-3 text-right">
                                     <div v-if="can.operate" class="inline-flex gap-2">
+                                        <UiButton size="sm" variant="ghost" @click="openContact(g)">Contato</UiButton>
                                         <UiButton v-if="g.rsvp_status === 'pendente'" size="sm" variant="success" @click="confirmGuest(g)">Confirmar</UiButton>
                                         <UiButton v-if="g.rsvp_status === 'pendente'" size="sm" variant="danger" @click="declineGuest(g)">Recusar</UiButton>
                                         <UiButton v-if="g.rsvp_status !== 'pendente'" size="sm" variant="neutral" @click="reconsiderGuest(g)">Reconsiderar</UiButton>
@@ -294,5 +306,15 @@ const inputClass =
                     />
                 </div>
         </PageContainer>
+
+        <ContactModal
+            :show="contactGuest !== null"
+            :event="event"
+            :guest="contactGuest"
+            :channels="options.contactChannel"
+            :outcomes="options.contactOutcome"
+            @close="closeContact"
+            @saved="() => toast.success('Contato registrado')"
+        />
     </AuthenticatedLayout>
 </template>
