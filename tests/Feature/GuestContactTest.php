@@ -157,3 +157,25 @@ it('rejeita canal ou resultado inválido', function () {
         ])
         ->assertSessionHasErrors('channel');
 });
+
+it('registra reconfirmacao por WhatsApp e deriva estagio reconfirmado (M4)', function () {
+    $event = Event::factory()->create();
+    $operador = contactMember($event, EventRole::Operador);
+    $guest = Guest::factory()->inEvent($event)->create(['rsvp_status' => RsvpStatus::Confirmado]);
+
+    $this->actingAs($operador)
+        ->post(route('guests.contacts.store', [$event->id, $guest->id]), [
+            'channel' => 'whatsapp',
+            'outcome' => 'reconfirmado',
+        ])
+        ->assertRedirect();
+
+    $contact = $guest->contacts()->first();
+    expect($contact->channel->value)->toBe('whatsapp');
+    expect($contact->outcome->value)->toBe('reconfirmado');
+    // Reconfirmar mantém/garante o RSVP confirmado.
+    expect($guest->fresh()->rsvp_status)->toBe(RsvpStatus::Confirmado);
+    // Estágio derivado é "reconfirmado".
+    expect(app(App\Services\ContactStage::class)->for($guest->fresh()))
+        ->toBe(App\Services\ContactStage::RECONFIRMADO);
+});

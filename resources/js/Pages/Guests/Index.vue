@@ -25,7 +25,16 @@ const showCreate = ref(false);
 
 // Modal de registro de contato (M1 — confirmação ativa).
 const contactGuest = ref(null);
+const contactPreset = reactive({ channel: 'ligacao', outcome: 'sem_resposta' });
 function openContact(guest) {
+    contactPreset.channel = 'ligacao';
+    contactPreset.outcome = 'sem_resposta';
+    contactGuest.value = guest;
+}
+// Atalho M4: reconfirmação por WhatsApp (registro manual).
+function openReconfirm(guest) {
+    contactPreset.channel = 'whatsapp';
+    contactPreset.outcome = 'reconfirmado';
     contactGuest.value = guest;
 }
 function closeContact() {
@@ -276,6 +285,7 @@ const inputClass =
                                 <td class="px-4 py-3 text-right">
                                     <div v-if="can.operate" class="inline-flex gap-2">
                                         <UiButton size="sm" variant="ghost" @click="openContact(g)">Contato</UiButton>
+                                        <UiButton v-if="g.rsvp_status === 'confirmado'" size="sm" variant="ghost" class="!text-emerald-700" @click="openReconfirm(g)">Reconfirmar WA</UiButton>
                                         <UiButton v-if="g.rsvp_status === 'pendente'" size="sm" variant="success" @click="confirmGuest(g)">Confirmar</UiButton>
                                         <UiButton v-if="g.rsvp_status === 'pendente'" size="sm" variant="danger" @click="declineGuest(g)">Recusar</UiButton>
                                         <UiButton v-if="g.rsvp_status !== 'pendente'" size="sm" variant="neutral" @click="reconsiderGuest(g)">Reconsiderar</UiButton>
@@ -330,6 +340,8 @@ const inputClass =
             :guest="contactGuest"
             :channels="options.contactChannel"
             :outcomes="options.contactOutcome"
+            :preset-channel="contactPreset.channel"
+            :preset-outcome="contactPreset.outcome"
             @close="closeContact"
             @saved="() => toast.success('Contato registrado')"
         />

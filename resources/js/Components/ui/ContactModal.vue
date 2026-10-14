@@ -10,6 +10,8 @@ const props = defineProps({
     guest: { type: Object, default: null },
     channels: { type: Array, default: () => [] },
     outcomes: { type: Array, default: () => [] },
+    presetChannel: { type: String, default: 'ligacao' },
+    presetOutcome: { type: String, default: 'sem_resposta' },
 });
 
 const emit = defineEmits(['close', 'saved']);
@@ -22,7 +24,11 @@ const form = useForm({
 });
 
 watch(() => props.show, (v) => {
-    if (v) form.reset();
+    if (v) {
+        form.reset();
+        form.channel = props.presetChannel;
+        form.outcome = props.presetOutcome;
+    }
 });
 
 const inputClass =
@@ -49,6 +55,9 @@ function submit() {
             </h3>
             <p class="mt-1 text-xs text-institutional-text/50">
                 Cada registro é mantido no histórico (append-only). Confirmar/reconfirmar reflete no RSVP.
+            </p>
+            <p v-if="form.channel === 'whatsapp'" class="mt-2 rounded-lg bg-institutional-50 px-3 py-2 text-xs text-institutional-700">
+                Registro <strong>manual</strong> de contato por WhatsApp. O sistema não envia nem lê mensagens automaticamente.
             </p>
 
             <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
