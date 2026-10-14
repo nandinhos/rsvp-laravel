@@ -183,3 +183,34 @@ it('expõe diff acima do planejamento quando o real supera o estimado', function
             ->where('metrics.audience_diff', 1)
         );
 });
+
+/**
+ * M5 — relatório da operação de confirmação ativa com denominadores claros.
+ */
+it('expõe o relatório de contato no dashboard com denominadores', function () {
+    $event = Event::factory()->create();
+    $gestor = dashMember($event);
+
+    // 1 não contatado, 1 sem resposta, 1 respondido.
+    Guest::factory()->inEvent($event)->create();
+    $semResposta = Guest::factory()->inEvent($event)->create();
+    App\Models\GuestContact::create([
+        'event_id' => $event->id, 'guest_id' => $semResposta->id,
+        'channel' => App\Enums\ContactChannel::Ligacao, 'outcome' => App\Enums\ContactOutcome::SemResposta,
+    ]);
+    $respondido = Guest::factory()->inEvent($event)->create();
+    App\Models\GuestContact::create([
+        'event_id' => $event->id, 'guest_id' => $respondido->id,
+        'channel' => App\Enums\ContactChannel::Ligacao, 'outcome' => App\Enums\ContactOutcome::Confirmou,
+    ]);
+
+    $this->actingAs($gestor)
+        ->get(route('events.dashboard', $event->id))
+        ->assertInertia(fn ($page) => $page
+            ->where('contactReport.total_lista', 3)
+            ->where('contactReport.nao_contatados', 1)
+            ->where('contactReport.contatados', 2)
+            ->where('contactReport.sem_resposta', 1)
+            ->where('contactReport.respondidos', 1)
+        );
+});
