@@ -128,10 +128,11 @@ Os testes rodam sobre **SQLite em memória** (determinístico, isolado do banco 
 
 ## Critérios de aceite
 
-A implementação é guiada por 14 critérios de aceite (CA-01 a CA-14) cobertos por testes
-automatizados — isolamento entre eventos, regras de representação, idempotência de check-in,
-indicadores sem dupla contagem, importação com pré-visualização, exportação com permissão
-server-side, auditoria e encerramento de evento. Detalhes em
+A implementação é guiada por 14 critérios de aceite (CA-01 a CA-14). Treze deles são cobertos
+por testes automatizados — isolamento entre eventos, regras de representação, idempotência de
+check-in, indicadores sem dupla contagem, importação com pré-visualização, exportação com
+permissão server-side, auditoria e encerramento de evento. O **CA-12 (responsividade)** é
+validado manualmente nas três classes de dispositivo. Detalhes em
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
