@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PageHero from '@/Components/ui/PageHero.vue';
+import PageContainer from '@/Components/ui/PageContainer.vue';
 import UiCard from '@/Components/ui/UiCard.vue';
 import UiButton from '@/Components/ui/UiButton.vue';
 import UiBadge from '@/Components/ui/UiBadge.vue';
@@ -54,17 +56,14 @@ const tabClass = (active) =>
     <Head :title="`Importar · ${event.name}`" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-institutional-900">
-                    Importar convidados — {{ event.name }}
-                </h2>
-                <UiButton :href="route('guests.index', event.id)" variant="ghost" size="md">Voltar à lista</UiButton>
-            </div>
-        </template>
+        <PageHero :title="`Importar convidados — ${event.name}`" subtitle="Pré-visualize erros e avisos antes de persistir (CA-08).">
+            <template #actions>
+                <UiButton :href="route('guests.index', event.id)" variant="onLightGhost" size="md">Voltar à lista</UiButton>
+            </template>
+        </PageHero>
 
-        <div class="py-6">
-            <div class="mx-auto max-w-5xl space-y-6 px-4 sm:px-6 lg:px-8">
+        <PageContainer max-width="5xl">
+            <div class="space-y-6">
                 <UiCard padding="p-6">
                     <div class="mb-4 flex gap-2">
                         <button @click="mode = 'text'" :class="tabClass(mode === 'text')" class="rounded-lg px-4 py-2 text-sm font-medium transition-colors">Colar texto</button>
@@ -146,6 +145,6 @@ const tabClass = (active) =>
                     </UiButton>
                 </UiCard>
             </div>
-        </div>
+        </PageContainer>
     </AuthenticatedLayout>
 </template>

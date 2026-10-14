@@ -43,7 +43,10 @@ class GuestListQuery
         }
 
         $query->where(function (Builder $q) use ($search) {
-            $q->where('full_name', 'like', "%{$search}%");
+            // Busca case-insensitive e portável (PostgreSQL e SQLite):
+            // compara em minúsculas nos dois lados.
+            $term = '%'.mb_strtolower($search).'%';
+            $q->whereRaw('LOWER(full_name) LIKE ?', [$term]);
 
             if (ctype_digit($search)) {
                 $q->orWhere('number', (int) $search);

@@ -34,6 +34,23 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'authorizedEvents' => fn () => $request->user()
+                ? $request->user()->events()
+                    ->orderByDesc('starts_at')
+                    ->get(['events.id', 'events.name', 'events.status'])
+                    ->map(fn ($event) => [
+                        'id' => $event->id,
+                        'name' => $event->name,
+                        'status' => $event->status->value,
+                    ])
+                : [],
+            'activeEvent' => function () use ($request) {
+                $event = $request->route('event');
+
+                return $event instanceof \App\Models\Event
+                    ? ['id' => $event->id, 'name' => $event->name, 'status' => $event->status->value]
+                    : null;
+            },
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'importPreview' => fn () => $request->session()->get('importPreview'),

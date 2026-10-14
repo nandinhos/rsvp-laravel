@@ -71,6 +71,69 @@ class GuestController extends Controller
         ]);
     }
 
+    /**
+     * Estação de credenciamento (portaria): busca unificada, contadores ao
+     * vivo e credenciamento rápido (CA-09, CA-12). Ordenação estável pela
+     * numeração do evento — credenciar NÃO reordena a lista.
+     *
+     * A lista é dividida por aptidão ao credenciamento:
+     *  - "eligible": convidados confirmados (podem ser credenciados);
+     *  - "pending":  convidados com RSVP pendente (precisam confirmar antes).
+     * Quem recusou (não participará) não aparece na estação.
+     */
+    public function checkInStation(Request $request, Event $event): Response
+    {
+        Gate::authorize('view', $event);
+
+        $search = (string) $request->query('search', '');
+
+        $toArray = fn (Guest $g) => [
+            'id' => $g->id,
+            'number' => $g->number,
+            'full_name' => $g->full_name,
+            'category' => $g->category?->name,
+            'rsvp_status' => $g->rsvp_status->value,
+            'rsvp_label' => $g->rsvp_status->label(),
+            'role_label' => $g->participation_role->label(),
+            'attendance_status' => $g->attendance_status->value,
+            'attendance_label' => $g->attendance_status->label(),
+        ];
+
+        $rows = $this->listQuery->build($event, ['search' => $search])->limit(200)->get();
+
+        $eligible = $rows
+            ->filter(fn (Guest $g) => $g->rsvp_status === RsvpStatus::Confirmado)
+            ->map($toArray)->values();
+
+        $pending = $rows
+            ->filter(fn (Guest $g) => $g->rsvp_status === RsvpStatus::Pendente)
+            ->map($toArray)->values();
+
+        $all = $event->guests()->get(['rsvp_status', 'attendance_status']);
+
+        return Inertia::render('Guests/CheckIn', [
+            'event' => [
+                'id' => $event->id,
+                'name' => $event->name,
+                'status' => $event->status->value,
+            ],
+            'eligible' => $eligible,
+            'pending' => $pending,
+            'search' => $search,
+            'counters' => [
+                'present' => $all->where('attendance_status', AttendanceStatus::Presente->value)->count(),
+                'confirmed' => $all->where('rsvp_status', RsvpStatus::Confirmado->value)->count(),
+                'awaiting' => $all->where('attendance_status', AttendanceStatus::Aguardando->value)
+                    ->where('rsvp_status', RsvpStatus::Confirmado->value)->count(),
+                'pending' => $all->where('rsvp_status', RsvpStatus::Pendente->value)->count(),
+                'total' => $all->count(),
+            ],
+            'can' => [
+                'operate' => $request->user()->can('operate', $event),
+            ],
+        ]);
+    }
+
     public function store(Request $request, Event $event): RedirectResponse
     {
         Gate::authorize('manageGuests', $event);
@@ -154,17 +217,76 @@ class GuestController extends Controller
         return back()->with('success', 'Ausência registrada.');
     }
 
+    /**
+     * Reconsideração (mudança de escolha): um convidado com decisão tomada
+     * (confirmado OU não participará) volta a Pendente, de forma explícita e
+     * auditada — jamais altera uma decisão silenciosamente. Fluxo:
+     * Pendente → (Confirmar | Recusar) → Reconsiderar → Pendente.
+     */
+    public function reconsider(Request $request, Event $event, Guest $guest): RedirectResponse
+    {
+        Gate::authorize('operate', $event);
+        $this->guardOwnership($event, $guest);
+        $this->guardOpen($event);
+
+        // Só faz sentido reconsiderar uma decisão já tomada.
+        abort_if($guest->rsvp_status === RsvpStatus::Pendente, 422);
+
+        $from = $guest->rsvp_status->value;
+
+        $this->rsvp->reset($guest); // volta a Pendente
+
+        $this->audit->log('guest.rsvp_reconsidered', $request->user(), $event, $guest, [
+            'from' => $from,
+            'to' => RsvpStatus::Pendente->value,
+        ]);
+
+        return back()->with('success', 'Decisão reconsiderada: convidado retornou para pendente.');
+    }
+
     public function checkIn(Request $request, Event $event, Guest $guest): RedirectResponse
     {
         Gate::authorize('operate', $event);
         $this->guardOwnership($event, $guest);
         $this->guardOpen($event);
 
-        $this->checkIn->checkIn($guest, $request->user());
+        try {
+            $this->checkIn->checkIn($guest, $request->user());
+        } catch (GuestDomainException $e) {
+            return back()->withErrors(['check_in' => $e->getMessage()]);
+        }
 
         $this->audit->log('guest.checked_in', $request->user(), $event, $guest);
 
         return back()->with('success', 'Credenciamento registrado.');
+    }
+
+    /** Reverte o credenciamento (desfazer imediato, PRD §2.6). */
+    public function revertCheckIn(Request $request, Event $event, Guest $guest): RedirectResponse
+    {
+        Gate::authorize('operate', $event);
+        $this->guardOwnership($event, $guest);
+        $this->guardOpen($event);
+
+        $this->checkIn->undo($guest);
+
+        $this->audit->log('guest.check_in_reverted', $request->user(), $event, $guest);
+
+        return back()->with('success', 'Credenciamento desfeito.');
+    }
+
+    /** Retorna o RSVP para pendente (desfazer confirmação/recusa). */
+    public function undoRsvp(Request $request, Event $event, Guest $guest): RedirectResponse
+    {
+        Gate::authorize('operate', $event);
+        $this->guardOwnership($event, $guest);
+        $this->guardOpen($event);
+
+        $this->rsvp->reset($guest);
+
+        $this->audit->log('guest.rsvp_reset', $request->user(), $event, $guest);
+
+        return back()->with('success', 'Confirmação desfeita.');
     }
 
     /**

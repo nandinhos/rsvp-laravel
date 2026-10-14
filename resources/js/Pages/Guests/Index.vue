@@ -6,6 +6,10 @@ import UiButton from '@/Components/ui/UiButton.vue';
 import UiBadge from '@/Components/ui/UiBadge.vue';
 import UiCard from '@/Components/ui/UiCard.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
+import AlertBanner from '@/Components/ui/AlertBanner.vue';
+import PageHero from '@/Components/ui/PageHero.vue';
+import PageContainer from '@/Components/ui/PageContainer.vue';
+import { useToast } from '@/composables/useToast';
 
 const props = defineProps({
     event: Object,
@@ -72,12 +76,59 @@ function exportUrl(name) {
 
 watch(form, () => applyFilters());
 
-function act(name, guestId) {
+const toast = useToast();
+
+/** Dispara a rota inversa (undo) sem recarregar o estado local. */
+function undoAction(name, guestId) {
     router.post(
         route(name, [props.event.id, guestId]),
         {},
         { preserveScroll: true, preserveState: true },
     );
+}
+
+/** Ação reversível: executa e oferece desfazer imediato via toast. */
+function actWithUndo(name, guest, opts) {
+    router.post(
+        route(name, [props.event.id, guest.id]),
+        {},
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                toast.success(opts.title(guest), opts.message ?? '', {
+                    undoLabel: opts.undoLabel,
+                    onUndo: () => undoAction(opts.undoRoute, guest.id),
+                });
+            },
+        },
+    );
+}
+
+function confirmGuest(guest) {
+    actWithUndo('guests.confirm', guest, {
+        title: (g) => `Participação confirmada: #${g.number} ${g.full_name}`,
+        undoLabel: 'Desfazer confirmação',
+        undoRoute: 'guests.undo-rsvp',
+    });
+}
+
+function declineGuest(guest) {
+    actWithUndo('guests.decline', guest, {
+        title: (g) => `Ausência registrada: #${g.number} ${g.full_name}`,
+        undoLabel: 'Desfazer recusa',
+        undoRoute: 'guests.undo-rsvp',
+    });
+}
+
+/** Mudança de escolha: decisão tomada (confirmado/recusado) volta a pendente. */
+function reconsiderGuest(guest) {
+    actWithUndo('guests.reconsider', guest, {
+        title: (g) => `Decisão reconsiderada: #${g.number} ${g.full_name}`,
+        message: 'RSVP retornou para Pendente.',
+        undoLabel: 'Desfazer',
+        undoRoute: 'guests.undo-rsvp',
+    });
 }
 
 const rsvpVariant = {
@@ -98,22 +149,23 @@ const inputClass =
     <Head :title="`Convidados · ${event.name}`" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <h2 class="text-xl font-semibold leading-tight text-institutional-900">
-                    {{ event.name }} — Convidados
-                </h2>
-                <div class="flex flex-wrap gap-2">
-                    <UiButton v-if="can.export" external :href="exportUrl('guests.export.excel')" variant="secondary" size="md">Excel</UiButton>
-                    <UiButton v-if="can.export" external :href="exportUrl('guests.export.pdf')" variant="secondary" size="md">PDF</UiButton>
-                    <UiButton v-if="can.manageGuests" :href="route('guests.import.create', event.id)" variant="primary">Importar</UiButton>
-                    <UiButton v-if="can.manageGuests" variant="success" @click="showCreate = !showCreate">Novo convidado</UiButton>
-                </div>
-            </div>
+        <template #banner v-if="event.status === 'encerrado'">
+            <AlertBanner full variant="warning">
+                <strong>Atenção:</strong> este evento foi <strong>ENCERRADO</strong>. Inclusões, confirmações e credenciamentos estão bloqueados (CA-14).
+            </AlertBanner>
         </template>
 
-        <div class="py-6">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <PageHero :title="`${event.name} — Convidados`" subtitle="Cadastro, classificação e confirmação de convidados do evento.">
+            <template #actions>
+                <UiButton v-if="can.operate" :href="route('guests.check-in-station', event.id)" variant="onLight" size="md">Credenciamento</UiButton>
+                <UiButton v-if="can.export" external :href="exportUrl('guests.export.excel')" variant="onLightGhost" size="md">Excel</UiButton>
+                <UiButton v-if="can.export" external :href="exportUrl('guests.export.pdf')" variant="onLightGhost" size="md">PDF</UiButton>
+                <UiButton v-if="can.manageGuests" :href="route('guests.import.create', event.id)" variant="onLightGhost" size="md">Importar</UiButton>
+                <UiButton v-if="can.manageGuests" variant="success" size="md" @click="showCreate = !showCreate">Novo convidado</UiButton>
+            </template>
+        </PageHero>
+
+        <PageContainer>
                 <!-- Formulário de cadastro manual (PRD §6-C) -->
                 <UiCard v-if="showCreate && can.manageGuests" padding="p-6" class="mb-4">
                     <h3 class="mb-4 font-semibold text-institutional-900">Novo convidado</h3>
@@ -195,9 +247,9 @@ const inputClass =
                                 <td class="px-4 py-3"><UiBadge :variant="attendanceVariant[g.attendance_status]">{{ g.attendance_label }}</UiBadge></td>
                                 <td class="px-4 py-3 text-right">
                                     <div v-if="can.operate" class="inline-flex gap-2">
-                                        <UiButton v-if="g.rsvp_status !== 'confirmado'" size="sm" variant="success" @click="act('guests.confirm', g.id)">Confirmar</UiButton>
-                                        <UiButton v-if="g.rsvp_status !== 'nao_participara'" size="sm" variant="danger" @click="act('guests.decline', g.id)">Recusar</UiButton>
-                                        <UiButton v-if="g.attendance_status !== 'presente'" size="sm" variant="primary" @click="act('guests.check-in', g.id)">Check-in</UiButton>
+                                        <UiButton v-if="g.rsvp_status === 'pendente'" size="sm" variant="success" @click="confirmGuest(g)">Confirmar</UiButton>
+                                        <UiButton v-if="g.rsvp_status === 'pendente'" size="sm" variant="danger" @click="declineGuest(g)">Recusar</UiButton>
+                                        <UiButton v-if="g.rsvp_status !== 'pendente'" size="sm" variant="neutral" @click="reconsiderGuest(g)">Reconsiderar</UiButton>
                                     </div>
                                 </td>
                             </tr>
@@ -222,8 +274,9 @@ const inputClass =
                             <UiBadge :variant="attendanceVariant[g.attendance_status]">{{ g.attendance_label }}</UiBadge>
                         </div>
                         <div v-if="can.operate" class="mt-3 flex gap-2">
-                            <UiButton v-if="g.rsvp_status !== 'confirmado'" variant="success" class="flex-1" @click="act('guests.confirm', g.id)">Confirmar</UiButton>
-                            <UiButton v-if="g.attendance_status !== 'presente'" variant="primary" class="flex-1" @click="act('guests.check-in', g.id)">Check-in</UiButton>
+                            <UiButton v-if="g.rsvp_status === 'pendente'" variant="success" class="flex-1" @click="confirmGuest(g)">Confirmar</UiButton>
+                            <UiButton v-if="g.rsvp_status === 'pendente'" variant="danger" class="flex-1" @click="declineGuest(g)">Recusar</UiButton>
+                            <UiButton v-if="g.rsvp_status !== 'pendente'" variant="neutral" class="flex-1" @click="reconsiderGuest(g)">Reconsiderar</UiButton>
                         </div>
                     </UiCard>
                 </div>
@@ -240,7 +293,6 @@ const inputClass =
                         v-html="link.label"
                     />
                 </div>
-            </div>
-        </div>
+        </PageContainer>
     </AuthenticatedLayout>
 </template>

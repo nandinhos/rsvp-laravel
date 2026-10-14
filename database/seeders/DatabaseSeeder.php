@@ -83,6 +83,24 @@ class DatabaseSeeder extends Seeder
         $make('Fernanda Rocha', 'Autoridade');
         $make('Gabriel Souza', 'Convidado geral', 'nao_participara');
         $make('Helena Dias', 'Diretoria', 'confirmado');
+
+        // Múltiplos CONFLITOS de representação (CA-06) para validar caso a caso:
+        // acompanhante confirma (vira representante) e, depois, o titular também
+        // confirma — gerando confirmação mútua bloqueante.
+        $conflictPairs = [
+            ['Irene Fonseca', 'Autoridade', 'Jorge Antunes', 'Convidado geral'],
+            ['Karina Belo', 'Diretoria', 'Lucas Prado', 'Convidado geral'],
+            ['Marcos Viana', 'Comitê', 'Nadia Reis', 'Convidado geral'],
+            ['Otávio Nunes', 'Autoridade', 'Paula Dantas', 'Convidado geral'],
+        ];
+
+        foreach ($conflictPairs as [$hostName, $hostCat, $repName, $repCat]) {
+            $host = $make($hostName, $hostCat);
+            $rep = $make($repName, $repCat);
+            $links->attachCompanion($rep, $host);
+            $rsvp->confirm($rep);  // acompanhante vira representante
+            $rsvp->confirm($host); // titular confirma => conflito mútuo (CA-06)
+        }
     }
 
     private function user(string $name, string $email): User

@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
         Route::post('conflicts/{relationship}/resolve', [ConflictController::class, 'resolve'])->name('conflicts.resolve');
 
         Route::get('guests', [GuestController::class, 'index'])->name('guests.index');
+        Route::get('check-in', [GuestController::class, 'checkInStation'])->name('guests.check-in-station');
         Route::post('guests', [GuestController::class, 'store'])->name('guests.store');
         Route::patch('guests/{guest}', [GuestController::class, 'update'])->name('guests.update');
         Route::delete('guests/{guest}', [GuestController::class, 'destroy'])->name('guests.destroy');
@@ -48,7 +49,12 @@ Route::middleware('auth')->group(function () {
         // Ações rápidas (PRD §5).
         Route::post('guests/{guest}/confirm', [GuestController::class, 'confirm'])->name('guests.confirm');
         Route::post('guests/{guest}/decline', [GuestController::class, 'decline'])->name('guests.decline');
+        Route::post('guests/{guest}/reconsider', [GuestController::class, 'reconsider'])->name('guests.reconsider');
         Route::post('guests/{guest}/check-in', [GuestController::class, 'checkIn'])->name('guests.check-in');
+
+        // Reversões (desfazer imediato — padrão de undo).
+        Route::post('guests/{guest}/revert-check-in', [GuestController::class, 'revertCheckIn'])->name('guests.revert-check-in');
+        Route::post('guests/{guest}/undo-rsvp', [GuestController::class, 'undoRsvp'])->name('guests.undo-rsvp');
 
         // Importação (PRD §6).
         Route::get('import', [GuestImportController::class, 'create'])->name('guests.import.create');

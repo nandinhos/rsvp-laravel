@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/vue3';
 
 defineProps({
     // primary | secondary | ghost | success | danger | neutral
+    // onLight (solido claro) e onLightGhost (contorno claro) p/ uso sobre fundo escuro (hero azul)
     variant: { type: String, default: 'primary' },
     size: { type: String, default: 'md' }, // sm | md
     href: { type: String, default: null }, // se presente, renderiza <Link>
@@ -20,6 +21,9 @@ const variants = {
     success: 'bg-emerald-600 text-white hover:bg-emerald-700',
     danger: 'bg-rose-600 text-white hover:bg-rose-700',
     neutral: 'border border-institutional-900/15 text-institutional-text hover:bg-institutional-50',
+    // Para o hero azul: cinza claro legível sobre fundo escuro.
+    onLight: 'bg-slate-100 text-institutional-900 shadow-sm hover:bg-white hover:-translate-y-0.5',
+    onLightGhost: 'border border-white/40 text-white hover:bg-white/15 hover:-translate-y-0.5',
 };
 
 const sizes = {

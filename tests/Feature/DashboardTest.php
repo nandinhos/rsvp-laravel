@@ -116,3 +116,70 @@ it('sinaliza conflitos pendentes no dashboard (CA-06)', function () {
             ->where('metrics.has_pending_conflicts', true)
         );
 });
+
+/**
+ * Campos derivados do painel: total na base, saldo de capacidade e aguardando chegada.
+ */
+it('expõe métricas derivadas de capacidade e comparecimento', function () {
+    $event = Event::factory()->create(['estimated_audience' => 10]);
+    $gestor = dashMember($event);
+    $rsvp = new RsvpService;
+
+    // 2 confirmados, 1 pendente => previstos=2, total=3.
+    $a = Guest::factory()->inEvent($event)->create();
+    $b = Guest::factory()->inEvent($event)->create();
+    Guest::factory()->inEvent($event)->create();
+    $rsvp->confirm($a);
+    $rsvp->confirm($b);
+
+    $this->actingAs($gestor)
+        ->get(route('events.dashboard', $event->id))
+        ->assertInertia(fn ($page) => $page
+            ->where('metrics.total_registered', 3)
+            ->where('metrics.capacity_balance', 8)   // 10 - 2 previstos
+            ->where('metrics.awaiting_arrival', 2)   // 2 previstos - 0 presentes
+        );
+});
+
+/**
+ * Público real × estimado e diferencial de planejamento.
+ */
+it('expõe público real e diff abaixo do planejamento', function () {
+    $event = Event::factory()->create(['estimated_audience' => 10]);
+    $gestor = dashMember($event);
+    $operador = dashMember($event, EventRole::Operador);
+    $rsvp = new RsvpService;
+
+    // 1 confirmado e credenciado; estimado 10 => real 1, diff -9.
+    $a = Guest::factory()->inEvent($event)->create();
+    $rsvp->confirm($a);
+    app(App\Services\CheckInService::class)->checkIn($a->fresh(), $operador);
+
+    $this->actingAs($gestor)
+        ->get(route('events.dashboard', $event->id))
+        ->assertInertia(fn ($page) => $page
+            ->where('metrics.actual_audience', 1)
+            ->where('metrics.audience_diff', -9)
+        );
+});
+
+it('expõe diff acima do planejamento quando o real supera o estimado', function () {
+    $event = Event::factory()->create(['estimated_audience' => 1]);
+    $gestor = dashMember($event);
+    $operador = dashMember($event, EventRole::Operador);
+    $rsvp = new RsvpService;
+
+    // 2 presentes, estimado 1 => diff +1.
+    foreach (range(1, 2) as $i) {
+        $g = Guest::factory()->inEvent($event)->create();
+        $rsvp->confirm($g);
+        app(App\Services\CheckInService::class)->checkIn($g->fresh(), $operador);
+    }
+
+    $this->actingAs($gestor)
+        ->get(route('events.dashboard', $event->id))
+        ->assertInertia(fn ($page) => $page
+            ->where('metrics.actual_audience', 2)
+            ->where('metrics.audience_diff', 1)
+        );
+});

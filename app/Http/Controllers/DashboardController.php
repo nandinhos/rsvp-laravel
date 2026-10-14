@@ -43,6 +43,11 @@ class DashboardController extends Controller
                 'confirmation_rate' => $metrics->confirmationRate(),
                 'attendance_rate' => $metrics->attendanceRate(),
                 'has_pending_conflicts' => $metrics->hasPendingConflicts(),
+                'total_registered' => $event->guests()->count(),
+                'capacity_balance' => max(0, $metrics->estimatedAudience() - $metrics->expectedParticipants()),
+                'awaiting_arrival' => max(0, $metrics->expectedParticipants() - $metrics->present()),
+                'actual_audience' => $metrics->present(),
+                'audience_diff' => $metrics->present() - $metrics->estimatedAudience(),
             ],
             'can' => [
                 'operate' => $request->user()->can('operate', $event),
