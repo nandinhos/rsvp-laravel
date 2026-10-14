@@ -154,6 +154,70 @@ class GuestController extends Controller
         ]);
     }
 
+    /**
+     * Fila de trabalho do operador (M3): convidados ordenados pela prioridade
+     * de ação da confirmação ativa. Ordenação por estágio é derivada do
+     * histórico (não está no banco), então deriva-se em PHP após carregar.
+     * Sem motor de workflow genérico.
+     */
+    public function workQueue(Request $request, Event $event): Response
+    {
+        Gate::authorize('view', $event);
+
+        $filters = $request->only(['search', 'category']);
+        $stage = app(\App\Services\ContactStage::class);
+
+        // Prioridade: menor número = mais urgente.
+        $priority = [
+            \App\Services\ContactStage::RETORNO_VENCIDO => 0,
+            \App\Services\ContactStage::NAO_CONTATADO => 1,
+            \App\Services\ContactStage::SEM_RESPOSTA => 2,
+            \App\Services\ContactStage::RETORNO_AGENDADO => 3,
+            \App\Services\ContactStage::RECONFIRMADO => 4,
+            \App\Services\ContactStage::RESPONDIDO => 5,
+        ];
+
+        $rows = $this->listQuery->build($event, $filters)
+            ->with(['contacts' => fn ($q) => $q->latest()->latest('id')->limit(1)])
+            ->get()
+            ->map(function (Guest $g) use ($stage) {
+                $last = $g->contacts->first();
+                $currentStage = $stage->for($g, $last);
+
+                return [
+                    'id' => $g->id,
+                    'number' => $g->number,
+                    'full_name' => $g->full_name,
+                    'category' => $g->category?->name,
+                    'rsvp_status' => $g->rsvp_status->value,
+                    'rsvp_label' => $g->rsvp_status->label(),
+                    'contact_stage' => $currentStage,
+                    'contact_stage_label' => \App\Services\ContactStage::label($currentStage),
+                    'last_contact_at' => optional($last)->created_at?->toIso8601String(),
+                    'scheduled_return_at' => optional($last)->scheduled_return_at?->toIso8601String(),
+                ];
+            })
+            ->sortBy([
+                fn ($a, $b) => ($priority[$a['contact_stage']] ?? 9) <=> ($priority[$b['contact_stage']] ?? 9),
+                fn ($a, $b) => $a['number'] <=> $b['number'],
+            ])
+            ->values();
+
+        return Inertia::render('Guests/WorkQueue', [
+            'event' => [
+                'id' => $event->id,
+                'name' => $event->name,
+                'status' => $event->status->value,
+            ],
+            'guests' => $rows,
+            'filters' => $filters,
+            'categories' => $event->categories()->orderBy('sort_order')->orderBy('name')->get(['id', 'name']),
+            'can' => [
+                'operate' => $request->user()->can('operate', $event),
+            ],
+        ]);
+    }
+
     public function store(Request $request, Event $event): RedirectResponse
     {
         Gate::authorize('manageGuests', $event);

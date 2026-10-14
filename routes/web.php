@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('guests', [GuestController::class, 'index'])->name('guests.index');
         Route::get('check-in', [GuestController::class, 'checkInStation'])->name('guests.check-in-station');
+        Route::get('work-queue', [GuestController::class, 'workQueue'])->name('guests.work-queue');
         Route::post('guests', [GuestController::class, 'store'])->name('guests.store');
         Route::patch('guests/{guest}', [GuestController::class, 'update'])->name('guests.update');
         Route::delete('guests/{guest}', [GuestController::class, 'destroy'])->name('guests.destroy');
