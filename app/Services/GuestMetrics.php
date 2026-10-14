@@ -110,4 +110,48 @@ class GuestMetrics
         return $this->event->guests()
             ->where('rsvp_status', RsvpStatus::Confirmado->value);
     }
+
+    /**
+     * Relatório da operação de confirmação ativa (M5), com denominadores
+     * claros. Os estágios são derivados do último contato (ContactStage);
+     * para o volume do MVP, deriva-se em PHP sobre a lista carregada.
+     *
+     * @return array<string,int>
+     */
+    public function contactReport(): array
+    {
+        $stage = app(ContactStage::class);
+
+        $guests = $this->event->guests()
+            ->with(['contacts' => fn ($q) => $q->latest()->latest('id')->limit(1)])
+            ->get();
+
+        $byStage = [
+            ContactStage::NAO_CONTATADO => 0,
+            ContactStage::SEM_RESPOSTA => 0,
+            ContactStage::RETORNO_AGENDADO => 0,
+            ContactStage::RETORNO_VENCIDO => 0,
+            ContactStage::RESPONDIDO => 0,
+            ContactStage::RECONFIRMADO => 0,
+        ];
+
+        foreach ($guests as $guest) {
+            $s = $stage->for($guest, $guest->contacts->first());
+            $byStage[$s]++;
+        }
+
+        $total = $guests->count();
+        $contatados = $total - $byStage[ContactStage::NAO_CONTATADO];
+
+        return [
+            'total_lista' => $total,
+            'nao_contatados' => $byStage[ContactStage::NAO_CONTATADO],
+            'contatados' => $contatados,
+            'sem_resposta' => $byStage[ContactStage::SEM_RESPOSTA],
+            'retornos_agendados' => $byStage[ContactStage::RETORNO_AGENDADO],
+            'retornos_vencidos' => $byStage[ContactStage::RETORNO_VENCIDO],
+            'respondidos' => $byStage[ContactStage::RESPONDIDO],
+            'reconfirmados' => $byStage[ContactStage::RECONFIRMADO],
+        ];
+    }
 }

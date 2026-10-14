@@ -12,6 +12,7 @@ const props = defineProps({
     event: Object,
     metrics: Object,
     can: Object,
+    contactReport: Object,
 });
 
 function action(name) {
@@ -246,6 +247,24 @@ const attendancePct = computed(() => Math.min(100, props.metrics.attendance_rate
                     </UiCard>
                 </div>
             </div>
+
+                <!-- Relatório da operação de confirmação ativa (M5) -->
+                <div v-if="contactReport" class="mt-6">
+                    <div class="mb-3 flex items-end justify-between">
+                        <h3 class="text-sm font-semibold uppercase tracking-wide text-institutional-text/60">Operação de confirmação ativa</h3>
+                        <p class="text-xs text-institutional-text/50">
+                            Contatados: <strong class="text-institutional-700">{{ contactReport.contatados }}</strong> / {{ contactReport.total_lista }}
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                        <StatCard label="Não contatados" :value="contactReport.nao_contatados" hint="Fila inicial" accent="ink" dot="slate" />
+                        <StatCard label="Sem resposta" :value="contactReport.sem_resposta" hint="Tentar novamente" accent="ink" dot="amber" />
+                        <StatCard label="Retornos agendados" :value="contactReport.retornos_agendados" hint="No prazo" accent="base" dot="sky" />
+                        <StatCard label="Retornos vencidos" :value="contactReport.retornos_vencidos" hint="Ação necessária" accent="ink" dot="amber" />
+                        <StatCard label="Respondidos" :value="contactReport.respondidos" hint="Confirmou/recusou" accent="base" dot="emerald" />
+                        <StatCard label="Reconfirmados" :value="contactReport.reconfirmados" hint="Validados" accent="interaction" dot="emerald" />
+                    </div>
+                </div>
         </PageContainer>
     </AuthenticatedLayout>
 </template>

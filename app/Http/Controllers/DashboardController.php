@@ -49,6 +49,7 @@ class DashboardController extends Controller
                 'actual_audience' => $metrics->present(),
                 'audience_diff' => $metrics->present() - $metrics->estimatedAudience(),
             ],
+            'contactReport' => $metrics->contactReport(),
             'can' => [
                 'operate' => $request->user()->can('operate', $event),
                 'manageGuests' => $request->user()->can('manageGuests', $event),
