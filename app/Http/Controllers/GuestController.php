@@ -38,30 +38,39 @@ class GuestController extends Controller
 
         $filters = $request->only(['search', 'category', 'role', 'rsvp', 'attendance']);
 
+        $stage = app(\App\Services\ContactStage::class);
+
         $guests = $this->listQuery->build($event, $filters)
             ->withCount('contacts')
             ->with(['contacts' => fn ($q) => $q->latest()->limit(1)])
             ->paginate(25)
             ->withQueryString()
-            ->through(fn (Guest $g) => [
-                'id' => $g->id,
-                'number' => $g->number,
-                'full_name' => $g->full_name,
-                'category' => $g->category?->name,
-                'rsvp_status' => $g->rsvp_status->value,
-                'rsvp_label' => $g->rsvp_status->label(),
-                'participation_role' => $g->participation_role->value,
-                'role_label' => $g->participation_role->label(),
-                'attendance_status' => $g->attendance_status->value,
-                'attendance_label' => $g->attendance_status->label(),
-                'contacts_count' => $g->contacts_count,
-                'last_contact' => optional($g->contacts->first(), fn ($c) => [
-                    'outcome' => $c->outcome->value,
-                    'outcome_label' => $c->outcome->label(),
-                    'channel_label' => $c->channel->label(),
-                    'at' => $c->created_at?->toIso8601String(),
-                ]),
-            ]);
+            ->through(function (Guest $g) use ($stage) {
+                $lastContact = $g->contacts->first();
+                $currentStage = $stage->for($g, $lastContact);
+
+                return [
+                    'id' => $g->id,
+                    'number' => $g->number,
+                    'full_name' => $g->full_name,
+                    'category' => $g->category?->name,
+                    'rsvp_status' => $g->rsvp_status->value,
+                    'rsvp_label' => $g->rsvp_status->label(),
+                    'participation_role' => $g->participation_role->value,
+                    'role_label' => $g->participation_role->label(),
+                    'attendance_status' => $g->attendance_status->value,
+                    'attendance_label' => $g->attendance_status->label(),
+                    'contacts_count' => $g->contacts_count,
+                    'last_contact' => optional($lastContact, fn ($c) => [
+                        'outcome' => $c->outcome->value,
+                        'outcome_label' => $c->outcome->label(),
+                        'channel_label' => $c->channel->label(),
+                        'at' => $c->created_at?->toIso8601String(),
+                    ]),
+                    'contact_stage' => $currentStage,
+                    'contact_stage_label' => \App\Services\ContactStage::label($currentStage),
+                ];
+            });
 
         return Inertia::render('Guests/Index', [
             'event' => [
