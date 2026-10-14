@@ -26,6 +26,7 @@ const eventNav = computed(() => {
     return [
         { label: 'Painel & Métricas', icon: 'dashboard', href: route('events.dashboard', e.id), active: current('events.dashboard') },
         { label: 'Convidados', icon: 'users', href: route('guests.index', e.id), active: current('guests.index') },
+        { label: 'Fila de trabalho', icon: 'queue', href: route('guests.work-queue', e.id), active: current('guests.work-queue') },
         { label: 'Credenciamento', icon: 'checkin', href: route('guests.check-in-station', e.id), active: current('guests.check-in-station') },
         { label: 'Importação', icon: 'import', href: route('guests.import.create', e.id), active: current('guests.import.create') },
         { label: 'Conflitos', icon: 'conflict', href: route('conflicts.index', e.id), active: current('conflicts.index') },
