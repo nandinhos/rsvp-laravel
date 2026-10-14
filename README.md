@@ -75,8 +75,9 @@ A stack sobe encapsulada em portas que **não conflitam** com serviços comuns:
 Na primeira subida o container executa migrations e **seed** automaticamente
 (usuários de demonstração + evento de exemplo). Acesse http://localhost:8900.
 
-> Para produção, defina `APP_KEY` no ambiente (veja [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)).
-> O valor presente no `docker-compose.yml` é apenas um fallback de demonstração.
+> Defina `APP_KEY` no `.env` (local) ou no ambiente (produção). O
+> `docker-compose.yml` não tem fallback: sem `APP_KEY`, o container não sobe.
+> Veja [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ---
 

@@ -45,7 +45,7 @@ e inicia o servidor. É **idempotente** — reinícios não duplicam dados.
 
 | Variável | Descrição | Padrão (demo) |
 |---|---|---|
-| `APP_KEY` | Chave de criptografia. **Defina em produção.** | fallback de demonstração |
+| `APP_KEY` | Chave de criptografia. **Obrigatória (sem fallback).** | — defina no `.env` |
 | `APP_ENV` | Ambiente | `production` |
 | `APP_URL` | URL pública | `http://localhost:8900` |
 | `DB_HOST` / `DB_PORT` | Banco | `pgsql` / `5432` |
@@ -54,7 +54,13 @@ e inicia o servidor. É **idempotente** — reinícios não duplicam dados.
 
 > **Produção:** gere uma `APP_KEY` real (`php artisan key:generate --show`),
 > defina-a no ambiente, use credenciais de banco fortes e `DB_SEED=false`.
-> O fallback presente no compose é apenas para subida local de demonstração.
+> O `docker-compose.yml` **não** possui fallback de chave: `APP_KEY` deve
+> estar definida no `.env` (local) ou no ambiente (produção), senão o
+> container não sobe.
+>
+> **Retenção (LGPD):** execute `php artisan guests:purge` (manual ou agendado)
+> para anonimizar convidados e eliminar contatos de eventos encerrados além
+> do `retention_days` configurado no evento.
 
 ---
 
